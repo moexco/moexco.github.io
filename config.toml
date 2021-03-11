@@ -146,6 +146,7 @@ theme = "LoveIt"
       scale = true
       # 是否添加 FullscreenControl
       fullscreen = true
+
     #  文章页面的分享信息设置
     [params.page.share]
       enable = true
