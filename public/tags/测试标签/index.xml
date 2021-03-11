@@ -6,10 +6,10 @@
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>moexco.moe@gmail.com (moexco)</managingEditor>
             <webMaster>moexco.moe@gmail.com (moexco)</webMaster><lastBuildDate>Sun, 07 Mar 2021 01:11:42 &#43;0800</lastBuildDate><atom:link href="https://moexco.github.io/tags/%E6%B5%8B%E8%AF%95%E6%A0%87%E7%AD%BE/" rel="self" type="application/rss+xml" /><item>
     <title>测试文章</title>
-    <link>https://moexco.github.io/posts/test/test/</link>
+    <link>https://moexco.github.io/posts/test/</link>
     <pubDate>Sun, 07 Mar 2021 01:11:42 &#43;0800</pubDate>
     <author>作者</author>
-    <guid>https://moexco.github.io/posts/test/test/</guid>
+    <guid>https://moexco.github.io/posts/test/</guid>
     <description><![CDATA[声明 因为需要所以测试 kbd测试 ctrl + c 测试换行 删除字体测试 加粗字体测试 斜体字体测试 段落测试 二段 代码块测试 下面是一段关于Golang的代码 1 2 3]]></description>
 </item></channel>
 </rss>
