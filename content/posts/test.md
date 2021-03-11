@@ -76,4 +76,4 @@ func main() {
 
 ## 图片测试
 
-![miku](/static/avatar.png)
+![miku](/test/miku.jpg)
