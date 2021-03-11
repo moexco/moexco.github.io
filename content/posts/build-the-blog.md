@@ -873,4 +873,4 @@ git push origin pages
 
 ## 自定义域名
 
-自定义域名可以在博客的/static里创建一个`CNAME`文件，注意没有后缀，然后写上你的域名，域名DNS解析请查看GitHub的文档
+自定义域名可以在博客的/static里创建一个`CNAME`文件，注意没有后缀，然后写上你的域名，域名DNS解析请查看GitHub的[文档](https://docs.github.com/cn/github/working-with-github-pages/configuring-a-custom-domain-for-your-github-pages-site)
