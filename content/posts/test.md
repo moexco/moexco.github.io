@@ -77,3 +77,7 @@ func main() {
 ## 图片测试
 
 ![miku](/test/miku.jpg)
+
+## 内嵌Flutter Web测试
+
+<iframe src="/web"></iframe>
