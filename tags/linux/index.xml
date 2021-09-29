@@ -1,1 +1,271 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Linux - 标签 - たったの部屋</title><link>https://moexco.github.io/tags/linux/</link><description>Linux - 标签 - たったの部屋</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>moexco.moe@gmail.com (moexco)</managingEditor><webMaster>moexco.moe@gmail.com (moexco)</webMaster><lastBuildDate>Fri, 26 Mar 2021 23:03:02 +0800</lastBuildDate><atom:link href="https://moexco.github.io/tags/linux/" rel="self" type="application/rss+xml"/><item><title>Linux触屏旋转</title><link>https://moexco.github.io/posts/linux-touch-screen-rotation/</link><pubDate>Fri, 26 Mar 2021 23:03:02 +0800</pubDate><author>作者</author><guid>https://moexco.github.io/posts/linux-touch-screen-rotation/</guid><description>说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号</description></item></channel></rss>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Linux - 标签 - たったの部屋</title><link>https://moexco.github.io/tags/linux/</link><description>Linux - 标签 - たったの部屋</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>moexco.moe@gmail.com (moexco)</managingEditor><webMaster>moexco.moe@gmail.com (moexco)</webMaster><lastBuildDate>Wed, 22 Sep 2021 14:48:13 +0800</lastBuildDate><atom:link href="https://moexco.github.io/tags/linux/" rel="self" type="application/rss+xml"/><item><title>Aio服务器搭建</title><link>https://moexco.github.io/posts/aio-server/</link><pubDate>Wed, 22 Sep 2021 14:48:13 +0800</pubDate><author>作者</author><guid>https://moexco.github.io/posts/aio-server/</guid><description><![CDATA[<h1 id="个人aio服务器搭建">个人Aio服务器搭建</h1>
+<p><strong>以下是碎碎念，建议跳过</strong></p>
+<blockquote>
+<p>百度云限速、360云盘迅雷云盘等相继关闭；QQ音乐、网易云音乐版权竞争，歌单里的歌三天两头灰色，独占的独占，曲库缺失的缺失，为了听歌还要每个平台都开会员，并且体验依旧割裂；爱奇艺异军突起、腾讯视频独霸江湖、优酷抱紧了老剧，哔哩哔哩看个纪晓岚标注着1080P事实上并不达标；广电要求影视作品一律先审后播，b站在抽帧黑幕圣光之后直接连追番都不行了，没法同步上映&hellip;&hellip;与此同时，网上一大堆家庭NAS方案层出不穷&hellip;&hellip;</p>
+</blockquote>
+<p>所以我不禁开始思考，已经在上班的我，是时候回收一下中学的梦想————想要一台自己的服务器。</p>
+<p>常年的网易云会员，b站会员现在也都已经过期了，促使我不再续费的原因，不外乎网易云越来越多的灰色，哔哩哔哩越来越少且不一定能同步更新的番，老实说，会员不贵，但体验实在是太割裂了。只能去特定平台才能看到特定的东西，对于视频其实还好，切一个app，但是音乐咧，我只想随机我所有的歌，我没法把几个平台的歌放在一起随机。</p>
+<p>总之，作为正版流媒体平台的受害者，我选择离开流媒体平台，支持正版的方式有非常的多，比方说买专辑，买光碟，但是，我需要一个允许我在任何地方在线播放的平台。</p>
+<p>所以，我需要一个NAS。</p>
+<p>但显然不够，作为一个coding玩家，我还需要一个开发环境，我需要一个运行环境等等等等</p>
+<p>所以，All In One，好巧不巧，我家有公网IP，而我又有域名，Cloudflare又可以白嫖DDNS，走起~</p>
+<h2 id="平台和硬件选择">平台和硬件选择</h2>
+<h3 id="低功耗-or-高性能">低功耗 or 高性能</h3>
+<p>确定了要AIO，那自然需要考虑一个严重的问题，传统NAS上肯定是追求低功耗的，并且不要求多高的性能，树莓派都可以胜任，甚至还有路由器刷op挂一个samba直接用的。</p>
+<p>当然了，NAS其实还有很多现成的方案，群晖啊，威联通啊什么的，而硬件上，也有之前的矿机什么星际蜗牛啊，最早的J1900到后来的J3455，可以说是五花八门了。</p>
+<p>不过都有一个共同特点，恰好都不是我现在入手能捞到实惠的东西，车那是一去不复返，鱼塘全涨价了。</p>
+<p>还有一个很重要的点，我不打算花很多钱，我预算1000以内弄完除硬盘以外的东西，然后花500左右整硬盘。</p>
+<p>并且我需要足够高的性能，J1900这些是不太行了，J3455绝对就超预算了。</p>
+<p>最后选择了闻名江湖的E5神教！</p>
+<h3 id="配置单">配置单</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">主板：华南X79豪华板
+CPU：E5 2650L V2
+网卡：Intel 82576
+电源：500W银欣(型号忘了)
+散热：酷冷至尊(未知型号)
+显卡：黄伟达 GTX 1050(真实型号估计是GTS 450)
+内存：16*2 + 8*2 总计48G的四通道DDR3 ECC
+固态：影驰 铁甲战将 240G SATA3
+机械：HGST 矿盘 3T*2
+</code></pre></td></tr></table>
+</div>
+</div><p>除掉硬盘，算上邮费，总共花了750，邮费就84了,
+两块HGST，赶上了涨价，花了454,
+所以总共1204，还可以吧，预算内</p>
+<p>这一套下来满载上200W了，不过考虑到大部分时间是基本上空载的，当然算不上省电，根据网友的测试，空载不到20W，一个月十几块钱电费吧(-_-</p>
+<h3 id="系统和软件">系统和软件</h3>
+<p>一般人就是直接黑群晖了，但咱是一般人嘛，咱是折腾佬啊</p>
+<p>想都没想就是<code>手搓KVM虚拟化</code>，从此踩坑无数后续章节慢慢补坑</p>
+<h1 id="正片">正片</h1>
+<h2 id="一arch物理系统安装">一、Arch物理系统安装</h2>
+<p>首先贴上Arch的官方wiki的<a href="https://wiki.archlinux.org/title/Installation_guide_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29" target="_blank" rel="noopener noreffer">中文安装文档</a></p>
+<p><del>好了，本章完结</del></p>
+<p><strong>以下注意事项</strong></p>
+<ol>
+<li>fdisk工具不支持gpt格式，也不支持2T以上容量的分区操作，所以我建议用<code>parted</code>代替，当然这个工具也是安装在Arch的livecd里了</li>
+<li><code>/etc/locale.gen</code>文件一定要编辑，然后用<code>locale-gen</code>生成信息，并且在<code>/etc/locale.conf</code>文件中至少写上<code>LANG=en_US.UTF-8</code>，否则将无法在终端显示中文，即使你安装了中文字体</li>
+<li>在重启到安装好的系统之前，网络工具一定要装，这里推荐一下<code>networkmanager</code>，安装命令<code>sudo pacman -Sy networkmanager</code>，然后设置开机启动<code>sudo systemctl enable NetworkManager</code></li>
+<li>安装好系统之后，文档里有简单的提了一下安装引导的事情，如果你不想开不了机，就记得点一下<a href="https://wiki.archlinux.org/title/GRUB_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29" target="_blank" rel="noopener noreffer"><code>GRUB</code></a>进去看一下关于引导的安装</li>
+<li>包管理器我建议使用<code>yay</code>而不是<code>pacman</code>，它们的命令是基本上一样的，但<code>yay</code>支持从<code>archlinuxcn</code>和<code>AUR</code>下载软件包，这显然比<code>pacman</code>更方便，以下的命令我将使用<code>yay</code>而不是<code>pacman</code></li>
+</ol>
+<blockquote>
+<p>因为AIO服务器的重点并不在物理机的系统安装上，而且网上有太多的同类教程可供参考，所以我就略过了，只标注了我认为需要注意一下的东西</p>
+</blockquote>
+<h2 id="二kvm虚拟化">二、KVM虚拟化</h2>
+<p>安装好物理机之后，接下来就是虚拟化，显然现在有非常多的懒人解决方案，集成度非常的高，效果也不错，有基于Debian的各种系统，也有不基于任何平台的单纯WEB管理的各种虚拟化管理页面，but，本着不对外提供服务的东西不需要可视化界面的原则，以及对KVM虚拟化的好奇，我不使用各种WEB或GUI管理工具。</p>
+<p>同样，我会在开头，将ArchWiki的文档<a href="https://wiki.archlinux.org/title/KVM_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29" target="_blank" rel="noopener noreffer">放在这里</a>，使用Arch的好处就是相当完善的文档，并且中文支持不错，当然我还是建议尽可能的查看英文文档，毕竟更新及时.</p>
+<h3 id="检查虚拟化支持">检查虚拟化支持</h3>
+<p>纯软件虚拟化不是不行但是效率实在实在太低了，所以现在都是从硬件平台上就开始支持各种虚拟化技术，也就是说，你需要先在主板的BIOS上打开虚拟化的开关，然后在系统里确认对虚拟化的支持状态。</p>
+<ol>
+<li>
+<p>在终端执行<code>LC_ALL=C lscpu | grep Virtualization</code>或<code>grep -E --color=auto 'vmx|svm|0xc0f' /proc/cpuinfo</code>，输出什么东西并不是太重要，重要的是不能没有输出，如果没有任何东西输出的话，你就需要去主板检查一下bios是不是没有正确打开虚拟化的开关</p>
+<p></p>
+</li>
+<li>
+<p>在确定了硬件支持之后，就需要确定软件是否安装了，执行<code>zgrep CONFIG_KVM /proc/config.gz</code>查看Linux内核的虚拟化模块是否安装，如果输出的结果不是<code>y</code>或者<code>m</code>，则说明虚拟化模块没有安装到位。<del>因为我没有遇到这个问题，所以我只能将安装模块的文档<a href="https://wiki.archlinux.org/title/Kernel_module_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29" target="_blank" rel="noopener noreffer">放在这里</a>，如果你遇到了，请自行解决</del></p>
+<p></p>
+</li>
+<li>
+<p>之后需要确定内核模块是否已经加载，执行<code>lsmod | grep kvm</code>，如果执行了之后没有输出东西，但是上一步又确定了已经安装模块，那就需要<a href="https://wiki.archlinux.org/title/Kernel_modules_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29#%E6%89%8B%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%8D%B8%E8%BD%BD" target="_blank" rel="noopener noreffer">手动加载</a>。<del>同样的，我也没有遇到这个问题</del></p>
+<p></p>
+</li>
+</ol>
+<p>到这里就差不多了，当然还有其他的东西可以使用，比方说<code>VIRTIO</code>模块、嵌套虚拟化之类的东西，可以参考上面的文档自行检查。</p>
+<h3 id="安装软件包">安装软件包</h3>
+<p>在Arch安装软件一直都是一件轻松愉快的事情，archlinuxcn也好AUR也好，可谓是独步天下</p>
+<p>不过我这里需要说明的事情是，KVM是一种虚拟化技术，而不是一个虚拟机，我们需要一个虚拟机来应用这种技术，在Linux平台上，那自然是<code>QEMU</code>了</p>
+<p>同样，<a href="https://wiki.archlinux.org/title/QEMU_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29" target="_blank" rel="noopener noreffer">文档</a>就放在这了</p>
+<p>因为我不启用<code>GUI</code>，也就是不安装桌面，所以我不需要对图形化的支持，在安装<code>qemu</code>的时候我选择<code>qemu-headless</code>，如果你有图形化的需求，则安装<code>qemu</code></p>
+<p>安装命令<code>yay -Sy qemu-headless</code></p>
+<h4 id="qemu简单跑个win虚拟机"><code>QEMU</code>简单跑个win虚拟机</h4>
+<blockquote>
+<p>运行Windows虚拟机跟直接跑Linux虚拟机不太一样，所以我单独列了一个小节，如果你不打算运行Windows虚拟机，那可以跳过，注意，本小节旨在将Windows虚拟机运行并完成安装，不会涉及到显卡直通或虚拟化显卡的内容</p>
+</blockquote>
+<h5 id="准备文件">准备文件</h5>
+<ul>
+<li>
+<p>因为微软❤️开源，所以我们没法直接在qemu虚拟机上启动Windows的镜像，我们需要一个辅助镜像virtio-win，Arch可以直接通过包管理下载到，执行命令<code>yay -Sy virtio-win</code>，然后这个镜像会被下载到<code>/var/lib/libvirt/images/virtio-win.iso</code>，将它复制到跟我们Windows系统镜像一个目录下就行了。</p>
+</li>
+<li>
+<p>下载Windows的系统镜像，比方说我下载的镜像重命名为<code>win10_2004.iso</code>。<del>主要是原来的名字太长了</del></p>
+</li>
+<li>
+<p>现在启动镜像和系统镜像都有了，我需要创建一个虚拟磁盘，就像装物理机的系统需要一块硬盘一样，虚拟机一样需要能识别到一个磁盘空间，执行命令<code>qemu-img create -f qcow2 win10.qcow2 100G</code>，这里我创建了一个叫<code>win10.qcow2</code>的镜像文件，镜像格式是<code>qcow2</code>，容量大小是100G，不过不用担心你的物理空间没那么大，它不会直接占用100G的空间，是动态占用的，不过你依然至少保留20G的空闲空间。</p>
+</li>
+</ul>
+<p>至此，我们必要的文件就已经准备好了</p>
+<h5 id="启动win10虚拟机">启动win10虚拟机</h5>
+<p><code>qemu</code>跟VMWare和VBox那些不一样，它不具备管理和持久化虚拟机的能力，你需要手动配置每一个参数，然后以命令的形式运行，运行之后不会保存参数，你下次运行依旧需要输入那些参数，所以我们创建一个<code>shell</code>文件来运行，省得敲那么长的命令</p>
+<p>并且我们不直接使用<code>qemu</code>命令，因为qemu软件包已经提供了一个不同架构的命令，比方说我们跑64位x86的虚拟机就用<code>qemu-system-x86_64</code>。<del>用这个已经很繁琐了，就不用更繁琐的<code>qemu</code>了</del></p>
+<p>执行<code>vim win.sh</code>然后复制下面的东西</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-s" data-lang="s"><span class="n">qemu</span><span class="o">-</span><span class="n">system</span><span class="o">-</span><span class="n">x86_64</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">enable</span><span class="o">-</span><span class="n">kvm</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">m</span> <span class="m">8</span><span class="n">G</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">smp</span> <span class="m">20</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">display</span> <span class="n">default</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">vga</span> <span class="n">virtio</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">machine</span> <span class="n">q35</span><span class="p">,</span><span class="n">vmport</span><span class="o">=</span><span class="n">off</span><span class="p">,</span><span class="n">dump</span><span class="o">-</span><span class="n">guest</span><span class="o">-</span><span class="n">core</span><span class="o">=</span><span class="n">off</span><span class="p">,</span><span class="n">mem</span><span class="o">-</span><span class="n">merge</span><span class="o">=</span><span class="n">off</span><span class="p">,</span><span class="n">hmat</span><span class="o">=</span><span class="n">on</span><span class="p">,</span><span class="n">usb</span><span class="o">=</span><span class="n">off</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">drive</span> <span class="n">file</span><span class="o">=</span><span class="n">win10.qcow2</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="m">0</span><span class="p">,</span><span class="n">media</span><span class="o">=</span><span class="n">disk</span><span class="p">,</span><span class="n">if</span><span class="o">=</span><span class="n">virtio</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">drive</span> <span class="n">file</span><span class="o">=</span><span class="n">virtio</span><span class="o">-</span><span class="n">win.iso</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="m">1</span><span class="p">,</span><span class="n">media</span><span class="o">=</span><span class="n">cdrom</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">drive</span> <span class="n">file</span><span class="o">=</span><span class="n">win10_2004.iso</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="m">2</span><span class="p">,</span><span class="n">media</span><span class="o">=</span><span class="n">cdrom</span> <span class="n">\</span>
+        <span class="o">-</span><span class="n">spice</span> <span class="n">port</span><span class="o">=</span><span class="m">5900</span><span class="p">,</span><span class="n">addr</span><span class="o">=</span><span class="m">0.0.0.0</span><span class="p">,</span><span class="n">disable</span><span class="o">-</span><span class="n">ticketing</span><span class="o">=</span><span class="n">on</span>
+</code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>别忘了把文件名和路径换成你们自己的，还有一些参数，比方说<code>-smp 20</code>是20核，建议改成你的电脑的真实配置，包括<code>-m 8G</code>是虚拟机分配的8G内存</p>
+</blockquote>
+<p>然后给它执行权限<code>chmod +x win.sh</code>，再运行它就可以启动了，但是因为我们没有图形化，看不到启动，这就需要我们从其他电脑远程了，上面的脚本里我使用了<code>spice</code>来做远程，自行从互联网下载一个支持连接<code>spice</code>的客户端连接即可。</p>
+<p>剩下的事情就是正常的安装和重启，就可以看到一个<strong>非常卡</strong>的win10虚拟机在跑了</p>
+<h3 id="libvirt-管理kvm">Libvirt 管理KVM</h3>
+<p><code>qemu</code>非常的强但是不好用，所以我们需要一个能像正常虚拟机一样管理它的，这里就不得不提<code>libvirt</code>，它提供了一些C实现的后端接口，和一个能用的前端<code>virsh</code></p>
+<h4 id="安装软件包-1">安装软件包</h4>
+<p>安装依旧很简单，只需要执行<code>yay -Sy libvirt</code>，但是只有这个是不够的，不同于上面小节中简单的启动一个虚拟机，我们需要管理一些东西，比方说网络，所以我们还需要一些其他的东西</p>
+<p>执行 <code>yay -Sy libvirt bridge-utils dnsmasq</code></p>
+<h4 id="启动服务">启动服务</h4>
+<p><code>libvirt</code>是一个常驻服务，所以需要启动，执行<code>sudo systemctl start libvirtd</code>，不过这样每次都需要手动启动，执行<code>sudo systemctl enable libvirtd</code>实现开机自启</p>
+<p>同时，我们需要启动virsh自带的NAT网络，执行<code>sudo virsh net-start default</code></p>
+<p>可以执行<code>sudo virsh net-list --all</code>查看网络是否启动了，如果有一个<code>defalut</code>网络那就是启动了</p>
+<h5 id="使用原生virsh启动虚拟机">使用原生virsh启动虚拟机</h5>
+<p>创建<code>win10.xml</code>文件，复制下面的内容，修改之后，执行<code>virsh define win10.xml</code>可以增加一个虚拟机，并且受<code>virsh</code>管理。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="nt">&lt;domain</span> <span class="na">type=</span><span class="s">&#34;kvm&#34;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>win10<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;memory</span> <span class="na">unit=</span><span class="s">&#34;GiB&#34;</span><span class="nt">&gt;</span>8<span class="nt">&lt;/memory&gt;</span>
+  <span class="nt">&lt;vcpu</span> <span class="na">placement=</span><span class="s">&#34;static&#34;</span><span class="nt">&gt;</span>20<span class="nt">&lt;/vcpu&gt;</span>
+  <span class="nt">&lt;os&gt;</span>
+    <span class="nt">&lt;type</span> <span class="na">arch=</span><span class="s">&#34;x86_64&#34;</span> <span class="na">machine=</span><span class="s">&#34;pc-i440fx-xenial&#34;</span><span class="nt">&gt;</span>hvm<span class="nt">&lt;/type&gt;</span>
+  <span class="nt">&lt;/os&gt;</span>
+  <span class="nt">&lt;cpu</span> <span class="na">mode=</span><span class="s">&#34;host-passthrough&#34;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;topology</span> <span class="na">sockets=</span><span class="s">&#34;2&#34;</span> <span class="na">cores=</span><span class="s">&#34;10&#34;</span> <span class="na">threads=</span><span class="s">&#34;2&#34;</span><span class="nt">&gt;&lt;/topology&gt;</span>
+  <span class="nt">&lt;/cpu&gt;</span>
+  <span class="nt">&lt;devices&gt;</span>
+    <span class="nt">&lt;disk</span> <span class="na">type=</span><span class="s">&#34;file&#34;</span> <span class="na">device=</span><span class="s">&#34;disk&#34;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;driver</span> <span class="na">name=</span><span class="s">&#34;qemu&#34;</span> <span class="na">type=</span><span class="s">&#34;qcow2&#34;</span> <span class="na">cache=</span><span class="s">&#34;default&#34;</span><span class="nt">&gt;&lt;/driver&gt;</span>
+      <span class="nt">&lt;source</span> <span class="na">file=</span><span class="s">&#34;win10.qcow2&#34;</span><span class="nt">&gt;&lt;/source&gt;</span>
+    <span class="nt">&lt;/disk&gt;</span>
+    <span class="nt">&lt;disk</span> <span class="na">type=</span><span class="s">&#34;file&#34;</span> <span class="na">device=</span><span class="s">&#34;cdrom&#34;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;source</span> <span class="na">file=</span><span class="s">&#34;win10_2004.iso&#34;</span> <span class="na">index=</span><span class="s">&#34;2&#34;</span><span class="nt">&gt;&lt;/source&gt;</span>
+    <span class="nt">&lt;/disk&gt;</span>
+    <span class="nt">&lt;disk</span> <span class="na">type=</span><span class="s">&#34;file&#34;</span> <span class="na">device=</span><span class="s">&#34;cdrom&#34;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;source</span> <span class="na">file=</span><span class="s">&#34;virtio-win.iso&#34;</span> <span class="na">index=</span><span class="s">&#34;1&#34;</span><span class="nt">&gt;&lt;/source&gt;</span>
+    <span class="nt">&lt;/disk&gt;</span>
+    <span class="nt">&lt;graphics</span> <span class="na">type=</span><span class="s">&#34;spice&#34;</span> <span class="na">port=</span><span class="s">&#34;5900&#34;</span> <span class="na">listen=</span><span class="s">&#34;0.0.0.0&#34;</span> <span class="na">passwd=</span><span class="s">&#34;yourpassword&#34;</span><span class="nt">&gt;&lt;/graphics&gt;</span>
+  <span class="nt">&lt;/devices&gt;</span>
+<span class="nt">&lt;/domain&gt;</span>
+</code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>虽然这是核心玩法，但是手写xml文件真的太麻烦了，而且参数实在太多了，所以还是需要一个东西，能帮我们手动生成一些模板配置，只需要在这个基础上简单修改我们的参数，这就是<code>virt-install</code>了。</p>
+</blockquote>
+<h4 id="安装virt-install">安装<code>virt-install</code></h4>
+<p>一样直接安装即可<code>yay -Sy virt-install</code></p>
+<blockquote>
+<p>安装这东西让我纠结了非常久，因为我本来是不想在物理机上装任何执行环境，哪怕是Python，但是手写xml真的太麻烦了&hellip;&hellip;这之间我发现了有另一个<code>libvirt-go</code>的项目，我在想如果有一个<code>virt-install-go</code>的项目就好了，这样不需要依赖也能直接用，不过目前是没有的，虽然可以自己实现，我自己稍微写了一下，这个周期实在太长了，而且<code>libvirt-go</code>本身也还有问题，文档也非常的缺，只能先用<code>virt-install</code>这个py的版本了&hellip;&hellip;</p>
+</blockquote>
+<h4 id="使用virt-install创建win10虚拟机">使用<code>virt-install</code>创建win10虚拟机</h4>
+<p>执行</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-s" data-lang="s"><span class="n">virt</span><span class="o">-</span><span class="n">install</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">name</span> <span class="n">Win10</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">memory</span> <span class="m">8192</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">vcpus</span> <span class="n">sockets</span><span class="o">=</span><span class="m">1</span><span class="p">,</span><span class="n">cores</span><span class="o">=</span><span class="m">10</span><span class="p">,</span><span class="n">threads</span><span class="o">=</span><span class="m">2</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">os</span><span class="o">-</span><span class="n">type</span><span class="o">=</span><span class="n">windows</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">os</span><span class="o">-</span><span class="n">variant</span><span class="o">=</span><span class="n">auto</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">cdrom</span><span class="o">=</span><span class="n">win10_2004.iso</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">disk</span> <span class="n">virtio</span><span class="o">-</span><span class="n">win.iso</span><span class="p">,</span><span class="n">device</span><span class="o">=</span><span class="n">cdrom</span><span class="p">,</span><span class="n">bus</span><span class="o">=</span><span class="n">ide</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">disk</span> <span class="n">win10.qcow2</span><span class="p">,</span><span class="n">bus</span><span class="o">=</span><span class="n">virtio</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="m">100</span><span class="p">,</span><span class="n">format</span><span class="o">=</span><span class="n">qcow2</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">graphics</span> <span class="n">spice</span><span class="p">,</span><span class="n">listen</span><span class="o">=::</span><span class="p">,</span><span class="n">password</span><span class="o">=</span><span class="n">yourpassword</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">hvm</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">autostart</span> <span class="n">\</span>
+<span class="o">--</span><span class="n">virt</span><span class="o">-</span><span class="n">type</span> <span class="n">kvm</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>然后就可以用<code>spice</code>连接过去看了，本地的窗口运行可以<code>Ctrl+C</code>关闭了</p>
+<h4 id="virsh管理虚拟机"><code>virsh</code>管理虚拟机</h4>
+<p><strong>注意: virsh命令不需要root权限</strong></p>
+<ul>
+<li>查看虚拟机列表：     <code>virsh list --all</code></li>
+<li>关闭虚拟机(不删除)： <code>virsh destroy name</code></li>
+<li>删除虚拟机(不关闭):  <code>virsh undefine name</code></li>
+<li>设置虚拟机开机自启： <code>virsh autostart name</code></li>
+<li>取消虚拟机开机自启： <code>virsh autostart --disable name</code></li>
+</ul>
+<blockquote>
+<p>如果你的虚拟机正在运行，没有先执行关闭就执行了删除，虚拟机不会被马上删除，会等到关闭之后才删除</p>
+</blockquote>
+<h2 id="三openwrt旁路由">三、openwrt旁路由</h2>
+<h2 id="四虚拟机映射物理分区">四、虚拟机映射物理分区</h2>
+<h2 id="五docker容器化服务管理">五、docker容器化服务管理</h2>
+<h2 id="六samba文件服务配置">六、samba文件服务配置</h2>
+<h2 id="七jellyfin家庭影音搭建">七、jellyfin家庭影音搭建</h2>]]></description></item><item><title>Linux触屏旋转</title><link>https://moexco.github.io/posts/linux-touch-screen-rotation/</link><pubDate>Fri, 26 Mar 2021 23:03:02 +0800</pubDate><author>作者</author><guid>https://moexco.github.io/posts/linux-touch-screen-rotation/</guid><description>说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号</description></item></channel></rss>
