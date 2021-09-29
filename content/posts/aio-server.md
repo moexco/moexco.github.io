@@ -8,8 +8,8 @@ author: "moexco"
 authorLink: ""
 description: ""
 
-tags: []
-categories: []
+tags: ["Linux"]
+categories: ["Linux"]
 
 hiddenFromHomePage: false
 hiddenFromSearch: false
@@ -28,6 +28,7 @@ license: ""
 
 # 个人Aio服务器搭建
 
+**以下是碎碎念，建议跳过**
 
 > 百度云限速、360云盘迅雷云盘等相继关闭；QQ音乐、网易云音乐版权竞争，歌单里的歌三天两头灰色，独占的独占，曲库缺失的缺失，为了听歌还要每个平台都开会员，并且体验依旧割裂；爱奇艺异军突起、腾讯视频独霸江湖、优酷抱紧了老剧，哔哩哔哩看个纪晓岚标注着1080P事实上并不达标；广电要求影视作品一律先审后播，b站在抽帧黑幕圣光之后直接连追番都不行了，没法同步上映......与此同时，网上一大堆家庭NAS方案层出不穷......
 
@@ -113,10 +114,13 @@ CPU：E5 2650L V2
 纯软件虚拟化不是不行但是效率实在实在太低了，所以现在都是从硬件平台上就开始支持各种虚拟化技术，也就是说，你需要先在主板的BIOS上打开虚拟化的开关，然后在系统里确认对虚拟化的支持状态。
 
 1. 在终端执行`LC_ALL=C lscpu | grep Virtualization`或`grep -E --color=auto 'vmx|svm|0xc0f' /proc/cpuinfo`，输出什么东西并不是太重要，重要的是不能没有输出，如果没有任何东西输出的话，你就需要去主板检查一下bios是不是没有正确打开虚拟化的开关
+   
     ![LC_ALL=C lscpu | grep Virtualization](/aio-server/kvm-lscpu.png)
 2. 在确定了硬件支持之后，就需要确定软件是否安装了，执行`zgrep CONFIG_KVM /proc/config.gz`查看Linux内核的虚拟化模块是否安装，如果输出的结果不是`y`或者`m`，则说明虚拟化模块没有安装到位。~~因为我没有遇到这个问题，所以我只能将安装模块的文档[放在这里](https://wiki.archlinux.org/title/Kernel_module_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))，如果你遇到了，请自行解决~~
+   
     ![zgrep CONFIG_KVM /proc/config.gz](/aio-server/kvm-config-gz.png)
 3. 之后需要确定内核模块是否已经加载，执行`lsmod | grep kvm`，如果执行了之后没有输出东西，但是上一步又确定了已经安装模块，那就需要[手动加载](https://wiki.archlinux.org/title/Kernel_modules_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#%E6%89%8B%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%8D%B8%E8%BD%BD)。~~同样的，我也没有遇到这个问题~~
+   
     ![lsmod | grep kvm](/aio-server/kvm-lsmod.png)
 
 到这里就差不多了，当然还有其他的东西可以使用，比方说`VIRTIO`模块、嵌套虚拟化之类的东西，可以参考上面的文档自行检查。
@@ -134,17 +138,17 @@ CPU：E5 2650L V2
 
 安装命令`yay -Sy qemu-headless`
 
-#### 简单跑个win虚拟机
+#### `QEMU`简单跑个win虚拟机
 
 > 运行Windows虚拟机跟直接跑Linux虚拟机不太一样，所以我单独列了一个小节，如果你不打算运行Windows虚拟机，那可以跳过，注意，本小节旨在将Windows虚拟机运行并完成安装，不会涉及到显卡直通或虚拟化显卡的内容
 
 ##### 准备文件
 
-因为微软❤️开源，所以我们没法直接在qemu虚拟机上启动Windows的镜像，我们需要一个辅助镜像virtio-win，Arch可以直接通过包管理下载到，执行命令`yay -Sy virtio-win`，然后这个镜像会被下载到`/var/lib/libvirt/images/virtio-win.iso`，将它复制到跟我们Windows系统镜像一个目录下就行了。
+* 因为微软❤️开源，所以我们没法直接在qemu虚拟机上启动Windows的镜像，我们需要一个辅助镜像virtio-win，Arch可以直接通过包管理下载到，执行命令`yay -Sy virtio-win`，然后这个镜像会被下载到`/var/lib/libvirt/images/virtio-win.iso`，将它复制到跟我们Windows系统镜像一个目录下就行了。
 
-下载Windows的系统镜像，比方说我下载的镜像重命名为`win10_2004.iso`。~~主要是原来的名字太长了~~
+* 下载Windows的系统镜像，比方说我下载的镜像重命名为`win10_2004.iso`。~~主要是原来的名字太长了~~
 
-现在启动镜像和系统镜像都有了，我需要创建一个虚拟磁盘，就像装物理机的系统需要一块硬盘一样，虚拟机一样需要能识别到一个磁盘空间，执行命令`qemu-img create -f qcow2 win10.qcow2 100G`，这里我创建了一个叫`win10.qcow2`的镜像文件，镜像格式是`qcow2`，容量大小是100G，不过不用担心你的物理空间没那么大，它不会直接占用100G的空间，是动态占用的，不过你依然至少保留20G的空闲空间。
+* 现在启动镜像和系统镜像都有了，我需要创建一个虚拟磁盘，就像装物理机的系统需要一块硬盘一样，虚拟机一样需要能识别到一个磁盘空间，执行命令`qemu-img create -f qcow2 win10.qcow2 100G`，这里我创建了一个叫`win10.qcow2`的镜像文件，镜像格式是`qcow2`，容量大小是100G，不过不用担心你的物理空间没那么大，它不会直接占用100G的空间，是动态占用的，不过你依然至少保留20G的空闲空间。
 
 至此，我们必要的文件就已经准备好了
 
