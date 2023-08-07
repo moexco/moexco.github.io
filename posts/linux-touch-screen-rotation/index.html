@@ -1,133 +1,10 @@
-<!doctype html><html lang=zh-cn>
-<head>
-<meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<meta name=robots content="noodp">
-<meta http-equiv=x-ua-compatible content="IE=edge, chrome=1">
-<title>Linux触屏旋转 - たったの部屋</title><meta name=Description content><meta property="og:title" content="Linux触屏旋转">
-<meta property="og:description" content="说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号">
-<meta property="og:type" content="article">
-<meta property="og:url" content="https://moexco.github.io/posts/linux-touch-screen-rotation/"><meta property="og:image" content="https://moexco.github.io/avatar.png"><meta property="article:section" content="posts">
-<meta property="article:published_time" content="2021-03-26T23:03:02+08:00">
-<meta property="article:modified_time" content="2021-03-26T23:03:02+08:00">
-<meta name=twitter:card content="summary_large_image">
-<meta name=twitter:image content="https://moexco.github.io/avatar.png">
-<meta name=twitter:title content="Linux触屏旋转">
-<meta name=twitter:description content="说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号">
-<meta name=application-name content="たったの部屋">
-<meta name=apple-mobile-web-app-title content="たったの部屋"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
-<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
-<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://moexco.github.io/posts/linux-touch-screen-rotation/><link rel=prev href=https://moexco.github.io/posts/build-the-blog/><link rel=next href=https://moexco.github.io/posts/aio-server/><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=/lib/fontawesome-free/all.min.css><link rel=stylesheet href=/lib/animate/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Linux触屏旋转","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/moexco.github.io\/posts\/linux-touch-screen-rotation\/"},"genre":"posts","keywords":"Linux","wordcount":2448,"url":"https:\/\/moexco.github.io\/posts\/linux-touch-screen-rotation\/","datePublished":"2021-03-26T23:03:02+08:00","dateModified":"2021-03-26T23:03:02+08:00","publisher":{"@type":"Organization","name":"moexco"},"author":{"@type":"Person","name":"moexco"},"description":""}</script></head>
-<body header-desktop=fixed header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':''==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:''==='dark')&&document.body.setAttribute('theme','dark')</script>
-<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
-<div class=header-wrapper>
-<div class=header-title>
-<a href=/ title=たったの部屋>たったの部屋</a>
-</div>
-<div class=menu>
-<div class=menu-inner><a class=menu-item href=/posts/> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
-<i class="fas fa-adjust fa-fw"></i>
-</a>
-</div>
-</div>
-</div>
-</header><header class=mobile id=header-mobile>
-<div class=header-container>
-<div class=header-wrapper>
-<div class=header-title>
-<a href=/ title=たったの部屋>たったの部屋</a>
-</div>
-<div class=menu-toggle id=menu-toggle-mobile>
-<span></span><span></span><span></span>
-</div>
-</div>
-<div class=menu id=menu-mobile><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
-<i class="fas fa-adjust fa-fw"></i>
-</a></div>
-</div>
-</header>
-<div class="search-dropdown desktop">
-<div id=search-dropdown-desktop></div>
-</div>
-<div class="search-dropdown mobile">
-<div id=search-dropdown-mobile></div>
-</div>
-<main class=main>
-<div class=container><div class=toc id=toc-auto>
-<h2 class=toc-title>目录</h2>
-<div class=toc-content id=toc-content-auto></div>
-</div><article class="page single"><h1 class="single-title animated flipInX">Linux触屏旋转</h1><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=" author" class=author><i class="fas fa-user-circle fa-fw"></i>moexco</a></span>&nbsp;<span class=post-category>收录于 <a href=/categories/linux/><i class="far fa-folder fa-fw"></i>Linux</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2021-03-26>2021-03-26</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2448 字&nbsp;
-<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
-</div><div class="details toc" id=toc-static kept>
-<div class="details-summary toc-title">
-<span>目录</span>
-<span><i class="details-icon fas fa-angle-right"></i></span>
-</div>
-<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
-<ul>
-<li><a href=#说明>说明</a></li>
-<li><a href=#安装xinput和libinput>安装xinput和libinput</a></li>
-<li><a href=#查看触控信息>查看触控信息</a></li>
-<li><a href=#libinput>libinput</a>
-<ul>
-<li><a href=#根据需要旋转矩阵>根据需要旋转矩阵</a></li>
-<li><a href=#xorg修改方法>xorg修改方法</a>
-<ul>
-<li><a href=#临时修改测试效果>临时修改(测试效果)</a></li>
-<li><a href=#持久化修改>持久化修改</a></li>
-</ul>
-</li>
-<li><a href=#wayland修改方法>wayland修改方法</a></li>
-</ul>
-</li>
-<li><a href=#evdev>Evdev</a>
-<ul>
-<li><a href=#xorg>xorg</a>
-<ul>
-<li><a href=#临时修改测试效果-1>临时修改(测试效果)</a></li>
-<li><a href=#持久化修改-1>持久化修改</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</nav></div>
-</div><div class=content id=content><p><img class=lazyload src=/svg/loading.min.svg data-src=/linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png data-srcset="/linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png, /linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png 1.5x, /linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png 2x" data-sizes=auto alt=/linux-touch-screen-rotation/无题_51832998.png title="miku镇楼 pid:51832998"></p>
-<h2 id=说明>说明</h2>
-<p>其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下</p>
-<blockquote>
-<p>起因是这样的：<br><br>
-我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号没记错是I15-TC，原想是用来看视频(<del>顺便推推gal</del>)，但是事与愿违，这个板子带win10着实性能捉急，而寨板嘛。。。。驱动原因又装不了win8，那只能考虑一下Linux了 <br> <br>
-Linux的驱动倒是基本都有，至少我用到的都有了，但是吧，就是有一个严重的问题，触屏反了。。。。 <br> <br>
-当时因为种种原因，我没有选择重新编译(<del>实在是没有编译设备啊，也不会有人想用Windows编译东西吧</del>)，而是修改一下打个补丁凑合用用</p>
-</blockquote>
-<h2 id=安装xinput和libinput>安装xinput和libinput</h2>
-<p>这里需要使用xinput查看一下触控信息，所以要安装xinput和libinput</p>
-<p>安装没有什么难度，简单提供一下Debian系列和Arch系列的安装命令：<br>
-Debian/Ubuntu: <code>sudo apt install xserver-xorg-input-libinput</code> <br>
-Arch/Manjaro: <code>sudo pacman -S xf86-input-libinput</code></p>
-<p>如果是Debian/Ubuntu的话，使用<code>sudo apt install xinput</code>命令安装，如果是其他的请自行查看包管理安装</p>
-<blockquote>
-<p>当然，还是推荐查看各自系统的安装文档</p>
-</blockquote>
-<h2 id=查看触控信息>查看触控信息</h2>
-<p>在终端键入命令<code>xinput --list</code></p>
-<p>它应该会打出大量的信息，如果你的打印是</p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>bash: xinput: command not found
-</code></pre></td></tr></table>
-</div>
-</div><p>请返回上一步，安装<code>xinput</code></p>
-<p>正确的信息应该长这样： <br></p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><meta http-equiv=x-ua-compatible content="IE=edge, chrome=1"><title>Linux触屏旋转 - たったの部屋</title><meta name=Description content><meta property="og:title" content="Linux触屏旋转"><meta property="og:description" content="说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号"><meta property="og:type" content="article"><meta property="og:url" content="https://moexco.github.io/posts/linux-touch-screen-rotation/"><meta property="og:image" content="https://moexco.github.io/avatar.png"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-03-26T23:03:02+08:00"><meta property="article:modified_time" content="2021-03-26T23:03:02+08:00"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://moexco.github.io/avatar.png"><meta name=twitter:title content="Linux触屏旋转"><meta name=twitter:description content="说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号"><meta name=application-name content="たったの部屋"><meta name=apple-mobile-web-app-title content="たったの部屋"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://moexco.github.io/posts/linux-touch-screen-rotation/><link rel=prev href=https://moexco.github.io/posts/build-the-blog/><link rel=next href=https://moexco.github.io/posts/aio-server/><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=/lib/fontawesome-free/all.min.css><link rel=stylesheet href=/lib/animate/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Linux触屏旋转","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/moexco.github.io\/posts\/linux-touch-screen-rotation\/"},"genre":"posts","keywords":"Linux","wordcount":2448,"url":"https:\/\/moexco.github.io\/posts\/linux-touch-screen-rotation\/","datePublished":"2021-03-26T23:03:02+08:00","dateModified":"2021-03-26T23:03:02+08:00","publisher":{"@type":"Organization","name":"moexco"},"author":{"@type":"Person","name":"moexco"},"description":""}</script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":""==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:""==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=たったの部屋>たったの部屋</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/categories/>分类 </a><span class="menu-item delimiter"></span><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw"></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=たったの部屋>たったの部屋</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw"></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animated flipInX">Linux触屏旋转</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw"></i>moexco</a></span>&nbsp;<span class=post-category>收录于 <a href=/categories/linux/><i class="far fa-folder fa-fw"></i>Linux</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2021-03-26>2021-03-26</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2448 字&nbsp;
+<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;</div></div><div class="details toc" id=toc-static kept><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#说明>说明</a></li><li><a href=#安装xinput和libinput>安装xinput和libinput</a></li><li><a href=#查看触控信息>查看触控信息</a></li><li><a href=#libinput>libinput</a><ul><li><a href=#根据需要旋转矩阵>根据需要旋转矩阵</a></li><li><a href=#xorg修改方法>xorg修改方法</a><ul><li><a href=#临时修改测试效果>临时修改(测试效果)</a></li><li><a href=#持久化修改>持久化修改</a></li></ul></li><li><a href=#wayland修改方法>wayland修改方法</a></li></ul></li><li><a href=#evdev>Evdev</a><ul><li><a href=#xorg>xorg</a><ul><li><a href=#临时修改测试效果-1>临时修改(测试效果)</a></li><li><a href=#持久化修改-1>持久化修改</a></li></ul></li></ul></li></ul></nav></div></div><div class=content id=content><p><img class=lazyload src=/svg/loading.min.svg data-src=/linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png data-srcset="/linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png, /linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png 1.5x, /linux-touch-screen-rotation/%e6%97%a0%e9%a2%98_51832998.png 2x" data-sizes=auto alt=/linux-touch-screen-rotation/无题_51832998.png title="miku镇楼 pid:51832998"></p><h2 id=说明>说明</h2><p>其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下</p><blockquote><p>起因是这样的：<br><br>我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号没记错是I15-TC，原想是用来看视频(<del>顺便推推gal</del>)，但是事与愿违，这个板子带win10着实性能捉急，而寨板嘛。。。。驱动原因又装不了win8，那只能考虑一下Linux了<br><br>Linux的驱动倒是基本都有，至少我用到的都有了，但是吧，就是有一个严重的问题，触屏反了。。。。<br><br>当时因为种种原因，我没有选择重新编译(<del>实在是没有编译设备啊，也不会有人想用Windows编译东西吧</del>)，而是修改一下打个补丁凑合用用</p></blockquote><h2 id=安装xinput和libinput>安装xinput和libinput</h2><p>这里需要使用xinput查看一下触控信息，所以要安装xinput和libinput</p><p>安装没有什么难度，简单提供一下Debian系列和Arch系列的安装命令：<br>Debian/Ubuntu: <code>sudo apt install xserver-xorg-input-libinput</code><br>Arch/Manjaro: <code>sudo pacman -S xf86-input-libinput</code></p><p>如果是Debian/Ubuntu的话，使用<code>sudo apt install xinput</code>命令安装，如果是其他的请自行查看包管理安装</p><blockquote><p>当然，还是推荐查看各自系统的安装文档</p></blockquote><h2 id=查看触控信息>查看触控信息</h2><p>在终端键入命令<code>xinput --list</code></p><p>它应该会打出大量的信息，如果你的打印是</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>bash: xinput: command not found
+</span></span></code></pre></td></tr></table></div></div><p>请返回上一步，安装<code>xinput</code></p><p>正确的信息应该长这样：<br></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span><span class=lnt>4
@@ -136,25 +13,16 @@ Arch/Manjaro: <code>sudo pacman -S xf86-input-libinput</code></p>
 </span><span class=lnt>7
 </span><span class=lnt>8
 </span><span class=lnt>9
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>moexco@ArchLinux:~ $ xinput --list
-⎡ Virtual core pointer                          id=2    [master pointer  (3)]
-⎜   ↳ Virtual core XTEST pointer                id=4    [slave  pointer  (2)]
-⎜   ↳ Logitech USB Optical Mouse                id=6    [slave  pointer  (2)]
-⎜   ↳ WaveShare WaveShare Touchscreen           id=7    [slave  pointer  (2)]
-⎣ Virtual core keyboard                         id=3    [master keyboard (2)]
-    ↳ Virtual core XTEST keyboard               id=5    [slave  keyboard (3)]
-    ↳ Logitech USB Keyboard                     id=8    [slave  keyboard (3)]
-    ↳ Logitech USB Keyboard                     id=9    [slave  keyboard (3)]
-</code></pre></td></tr></table>
-</div>
-</div><p>随后我们要在这里面找到<code>Touchscreen</code>字样的一项，比方说我上面的信息里的<code>WaveShare WaveShare Touchscreen id=7 [slave pointer (2)]</code></p>
-<p>现在我们要确认一下这个是不是走了<code>libinput</code>，键入命令: <code>xinput --list-props 7</code>，这里的<code>7</code>是上面的<code>id=7</code></p>
-<p>应该会打印出类似如下的信息：<br></p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>moexco@ArchLinux:~ $ xinput --list
+</span></span><span class=line><span class=cl>⎡ Virtual core pointer                          id=2    [master pointer  (3)]
+</span></span><span class=line><span class=cl>⎜   ↳ Virtual core XTEST pointer                id=4    [slave  pointer  (2)]
+</span></span><span class=line><span class=cl>⎜   ↳ Logitech USB Optical Mouse                id=6    [slave  pointer  (2)]
+</span></span><span class=line><span class=cl>⎜   ↳ WaveShare WaveShare Touchscreen           id=7    [slave  pointer  (2)]
+</span></span><span class=line><span class=cl>⎣ Virtual core keyboard                         id=3    [master keyboard (2)]
+</span></span><span class=line><span class=cl>    ↳ Virtual core XTEST keyboard               id=5    [slave  keyboard (3)]
+</span></span><span class=line><span class=cl>    ↳ Logitech USB Keyboard                     id=8    [slave  keyboard (3)]
+</span></span><span class=line><span class=cl>    ↳ Logitech USB Keyboard                     id=9    [slave  keyboard (3)]
+</span></span></code></pre></td></tr></table></div></div><p>随后我们要在这里面找到<code>Touchscreen</code>字样的一项，比方说我上面的信息里的<code>WaveShare WaveShare Touchscreen id=7 [slave pointer (2)]</code></p><p>现在我们要确认一下这个是不是走了<code>libinput</code>，键入命令: <code>xinput --list-props 7</code>，这里的<code>7</code>是上面的<code>id=7</code></p><p>应该会打印出类似如下的信息：<br></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -182,43 +50,35 @@ Arch/Manjaro: <code>sudo pacman -S xf86-input-libinput</code></p>
 </span><span class=lnt>26
 </span><span class=lnt>27
 </span><span class=lnt>28
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>moexco@ArchLinux:~ $ xinput --list-props 7
-Device &#39;WaveShare WaveShare Touchscreen&#39;:
-        Device Enabled (115):   1
-        Coordinate Transformation Matrix (116): 1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000
-        Device Accel Profile (240):     0
-        Device Accel Constant Deceleration (241):       1.000000
-        Device Accel Adaptive Deceleration (242):       1.000000
-        Device Accel Velocity Scaling (243):    10.000000
-        Device Product ID (244):        3823, 5
-        Device Node (245):      &#34;/dev/input/event3&#34;
-        Evdev Axis Inversion (246):     0, 0
-        Evdev Axis Calibration (247):   &lt;no items&gt;
-        Evdev Axes Swap (248):  0
-        Axis Labels (249):      &#34;Abs MT Position X&#34; (267), &#34;Abs MT Position Y&#34; (268), &#34;Abs MT Pressure&#34; (269), &#34;None&#34; (0), &#34;None&#34; (0), &#34;None&#34; (0)
-        Button Labels (250):    &#34;Button Unknown&#34; (233), &#34;Button Unknown&#34; (233), &#34;Button Unknown&#34; (233), &#34;Button Wheel Up&#34; (121), &#34;Button Wheel Down&#34; (122)
-        Evdev Scrolling Distance (251): 0, 0, 0
-        Evdev Middle Button Emulation (252):    0
-        Evdev Middle Button Timeout (253):      50
-        Evdev Third Button Emulation (254):     0
-        Evdev Third Button Emulation Timeout (255):     1000
-        Evdev Third Button Emulation Button (256):      3
-        Evdev Third Button Emulation Threshold (257):   20
-        Evdev Wheel Emulation (258):    0
-        Evdev Wheel Emulation Axes (259):       0, 0, 4, 5
-        Evdev Wheel Emulation Inertia (260):    10
-        Evdev Wheel Emulation Timeout (261):    200
-        Evdev Wheel Emulation Button (262):     4
-        Evdev Drag Lock Buttons (263):  0
-</code></pre></td></tr></table>
-</div>
-</div><p>OK，看到<code>Coordinate Transformation Matrix (116): 1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000</code>，这就是我们要的信息了，这说明是<code>libinput</code>方案</p>
-<p>当然，还有另一种是<code>Evdev</code>，也就是上面的：<br></p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>moexco@ArchLinux:~ $ xinput --list-props 7
+</span></span><span class=line><span class=cl>Device &#39;WaveShare WaveShare Touchscreen&#39;:
+</span></span><span class=line><span class=cl>        Device Enabled (115):   1
+</span></span><span class=line><span class=cl>        Coordinate Transformation Matrix (116): 1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000
+</span></span><span class=line><span class=cl>        Device Accel Profile (240):     0
+</span></span><span class=line><span class=cl>        Device Accel Constant Deceleration (241):       1.000000
+</span></span><span class=line><span class=cl>        Device Accel Adaptive Deceleration (242):       1.000000
+</span></span><span class=line><span class=cl>        Device Accel Velocity Scaling (243):    10.000000
+</span></span><span class=line><span class=cl>        Device Product ID (244):        3823, 5
+</span></span><span class=line><span class=cl>        Device Node (245):      &#34;/dev/input/event3&#34;
+</span></span><span class=line><span class=cl>        Evdev Axis Inversion (246):     0, 0
+</span></span><span class=line><span class=cl>        Evdev Axis Calibration (247):   &lt;no items&gt;
+</span></span><span class=line><span class=cl>        Evdev Axes Swap (248):  0
+</span></span><span class=line><span class=cl>        Axis Labels (249):      &#34;Abs MT Position X&#34; (267), &#34;Abs MT Position Y&#34; (268), &#34;Abs MT Pressure&#34; (269), &#34;None&#34; (0), &#34;None&#34; (0), &#34;None&#34; (0)
+</span></span><span class=line><span class=cl>        Button Labels (250):    &#34;Button Unknown&#34; (233), &#34;Button Unknown&#34; (233), &#34;Button Unknown&#34; (233), &#34;Button Wheel Up&#34; (121), &#34;Button Wheel Down&#34; (122)
+</span></span><span class=line><span class=cl>        Evdev Scrolling Distance (251): 0, 0, 0
+</span></span><span class=line><span class=cl>        Evdev Middle Button Emulation (252):    0
+</span></span><span class=line><span class=cl>        Evdev Middle Button Timeout (253):      50
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation (254):     0
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation Timeout (255):     1000
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation Button (256):      3
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation Threshold (257):   20
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation (258):    0
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Axes (259):       0, 0, 4, 5
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Inertia (260):    10
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Timeout (261):    200
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Button (262):     4
+</span></span><span class=line><span class=cl>        Evdev Drag Lock Buttons (263):  0
+</span></span></code></pre></td></tr></table></div></div><p>OK，看到<code>Coordinate Transformation Matrix (116): 1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000</code>，这就是我们要的信息了，这说明是<code>libinput</code>方案</p><p>当然，还有另一种是<code>Evdev</code>，也就是上面的：<br></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -231,231 +91,79 @@ Device &#39;WaveShare WaveShare Touchscreen&#39;:
 </span><span class=lnt>11
 </span><span class=lnt>12
 </span><span class=lnt>13
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>        Evdev Scrolling Distance (251): 0, 0, 0
-        Evdev Middle Button Emulation (252):    0
-        Evdev Middle Button Timeout (253):      50
-        Evdev Third Button Emulation (254):     0
-        Evdev Third Button Emulation Timeout (255):     1000
-        Evdev Third Button Emulation Button (256):      3
-        Evdev Third Button Emulation Threshold (257):   20
-        Evdev Wheel Emulation (258):    0
-        Evdev Wheel Emulation Axes (259):       0, 0, 4, 5
-        Evdev Wheel Emulation Inertia (260):    10
-        Evdev Wheel Emulation Timeout (261):    200
-        Evdev Wheel Emulation Button (262):     4
-        Evdev Drag Lock Buttons (263):  0
-</code></pre></td></tr></table>
-</div>
-</div><p>如果有看到类似这些的话，可以使用使用<code>Evdev</code></p>
-<h2 id=libinput>libinput</h2>
-<h3 id=根据需要旋转矩阵>根据需要旋转矩阵</h3>
-<p>从上面我们可以看到，屏幕的触控其实就是那一串数字：<br></p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>        Evdev Scrolling Distance (251): 0, 0, 0
+</span></span><span class=line><span class=cl>        Evdev Middle Button Emulation (252):    0
+</span></span><span class=line><span class=cl>        Evdev Middle Button Timeout (253):      50
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation (254):     0
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation Timeout (255):     1000
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation Button (256):      3
+</span></span><span class=line><span class=cl>        Evdev Third Button Emulation Threshold (257):   20
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation (258):    0
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Axes (259):       0, 0, 4, 5
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Inertia (260):    10
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Timeout (261):    200
+</span></span><span class=line><span class=cl>        Evdev Wheel Emulation Button (262):     4
+</span></span><span class=line><span class=cl>        Evdev Drag Lock Buttons (263):  0
+</span></span></code></pre></td></tr></table></div></div><p>如果有看到类似这些的话，可以使用使用<code>Evdev</code></p><h2 id=libinput>libinput</h2><h3 id=根据需要旋转矩阵>根据需要旋转矩阵</h3><p>从上面我们可以看到，屏幕的触控其实就是那一串数字：<br></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>1 0 0
-0 1 0
-0 0 1
-</code></pre></td></tr></table>
-</div>
-</div><p>在正常情况下，上面的样子就是正确的，但是我们现在要修改一下触控的位置，也许是旋转，也许是交换x轴，也许是交换y轴，而我的酷比平板遇到的情况是，点击屏幕左上角，实际出发点击的是在屏幕右上角，也就是说，我需要交换x轴坐标</p>
-<p>这里提供一些几种常见的结果：<br></p>
-<ul>
-<li>只交换x轴<br>
-<code>-1 0 1 0 1 0 0 0 1</code></li>
-<li>只交换y轴<br>
-<code>1 0 0 0 -1 1 0 0 1</code></li>
-<li>交换x轴和y轴(即镜像翻转)<br>
-<code>-1 0 1 0 -1 1 0 0 1</code></li>
-<li>90度旋转<br>
-<code>0 1 0 -1 0 1 0 0 1</code></li>
-<li>180度旋转<br>
-<code>-1 0 1 0 -1 1 0 0 1</code></li>
-<li>270度旋转<br>
-<code>0 -1 1 1 0 0 0 0 1</code></li>
-</ul>
-<h3 id=xorg修改方法>xorg修改方法</h3>
-<blockquote>
-<p>Linux Desktop 的古老方案就是X11和xorg，当然xorg的所有输入都是经由X11所以，从X11的配置下手，改一改应该就好了</p>
-</blockquote>
-<h4 id=临时修改测试效果>临时修改(测试效果)</h4>
-<p>选定了修改后的触控矩阵之后，可以先在终端试一下，用如下命令：<br>
-<code>xinput set-prop 'WaveShare WaveShare Touchscreen' 'Coordinate Transformation Matrix' -1 0 1 0 1 0 0 0 1</code></p>
-<p><code>WaveShare WaveShare Touchscreen</code>是驱动名，根据上面打印出来的修改，<code>Coordinate Transformation Matrix</code>是我们要修改的，所以是固定的，而最后的就是矩阵参数了</p>
-<p>理论上运行完之后就生效了，你可以用这个方式测试哪个矩阵参数适合你的情况</p>
-<h4 id=持久化修改>持久化修改</h4>
-<p>每次都运行一下那个命令着实有些不优雅，其实xinput是可以写入到配置文件里的</p>
-<p>首先复制一下<code>/usr/share/X11/xorg.conf.d/40-libinput.conf</code>到<code>/etc/X11/xorg.conf.d/</code>下，如果etc下的目录不存在就手动创建，如果conf文件名字数字不一样没关系，复制就行了</p>
-<p>然后修改<code>/etc/X11/xorg.conf.d/40-libinput.conf</code>文件：<br></p>
-<p>找到<code>touchscreen</code>项: <br></p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>1 0 0
+</span></span><span class=line><span class=cl>0 1 0
+</span></span><span class=line><span class=cl>0 0 1
+</span></span></code></pre></td></tr></table></div></div><p>在正常情况下，上面的样子就是正确的，但是我们现在要修改一下触控的位置，也许是旋转，也许是交换x轴，也许是交换y轴，而我的酷比平板遇到的情况是，点击屏幕左上角，实际出发点击的是在屏幕右上角，也就是说，我需要交换x轴坐标</p><p>这里提供一些几种常见的结果：<br></p><ul><li>只交换x轴<br><code>-1 0 1 0 1 0 0 0 1</code></li><li>只交换y轴<br><code>1 0 0 0 -1 1 0 0 1</code></li><li>交换x轴和y轴(即镜像翻转)<br><code>-1 0 1 0 -1 1 0 0 1</code></li><li>90度旋转<br><code>0 1 0 -1 0 1 0 0 1</code></li><li>180度旋转<br><code>-1 0 1 0 -1 1 0 0 1</code></li><li>270度旋转<br><code>0 -1 1 1 0 0 0 0 1</code></li></ul><h3 id=xorg修改方法>xorg修改方法</h3><blockquote><p>Linux Desktop 的古老方案就是X11和xorg，当然xorg的所有输入都是经由X11所以，从X11的配置下手，改一改应该就好了</p></blockquote><h4 id=临时修改测试效果>临时修改(测试效果)</h4><p>选定了修改后的触控矩阵之后，可以先在终端试一下，用如下命令：<br><code>xinput set-prop 'WaveShare WaveShare Touchscreen' 'Coordinate Transformation Matrix' -1 0 1 0 1 0 0 0 1</code></p><p><code>WaveShare WaveShare Touchscreen</code>是驱动名，根据上面打印出来的修改，<code>Coordinate Transformation Matrix</code>是我们要修改的，所以是固定的，而最后的就是矩阵参数了</p><p>理论上运行完之后就生效了，你可以用这个方式测试哪个矩阵参数适合你的情况</p><h4 id=持久化修改>持久化修改</h4><p>每次都运行一下那个命令着实有些不优雅，其实xinput是可以写入到配置文件里的</p><p>首先复制一下<code>/usr/share/X11/xorg.conf.d/40-libinput.conf</code>到<code>/etc/X11/xorg.conf.d/</code>下，如果etc下的目录不存在就手动创建，如果conf文件名字数字不一样没关系，复制就行了</p><p>然后修改<code>/etc/X11/xorg.conf.d/40-libinput.conf</code>文件：<br></p><p>找到<code>touchscreen</code>项:<br></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span><span class=lnt>4
 </span><span class=lnt>5
 </span><span class=lnt>6
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback> Section &#34;InputClass&#34;
-        Identifier &#34;libinput touchscreen catchall&#34;
-        MatchIsTouchscreen &#34;on&#34;
-        MatchDevicePath &#34;/dev/input/event*&#34;
-        Driver &#34;libinput&#34;
- EndSection
-</code></pre></td></tr></table>
-</div>
-</div><p>在里面添加一行，变成这样：<br></p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl> Section &#34;InputClass&#34;
+</span></span><span class=line><span class=cl>        Identifier &#34;libinput touchscreen catchall&#34;
+</span></span><span class=line><span class=cl>        MatchIsTouchscreen &#34;on&#34;
+</span></span><span class=line><span class=cl>        MatchDevicePath &#34;/dev/input/event*&#34;
+</span></span><span class=line><span class=cl>        Driver &#34;libinput&#34;
+</span></span><span class=line><span class=cl> EndSection
+</span></span></code></pre></td></tr></table></div></div><p>在里面添加一行，变成这样：<br></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span><span class=lnt>4
 </span><span class=lnt>5
 </span><span class=lnt>6
 </span><span class=lnt>7
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback> Section &#34;InputClass&#34;
-        Identifier &#34;libinput touchscreen catchall&#34;
-        Option &#34;CalibrationMatrix&#34; &#34;-1 0 1 0 1 0 0 0 1&#34;
-        MatchIsTouchscreen &#34;on&#34;
-        MatchDevicePath &#34;/dev/input/event*&#34;
-        Driver &#34;libinput&#34;
- EndSection
-</code></pre></td></tr></table>
-</div>
-</div><p>重启就生效了</p>
-<h3 id=wayland修改方法>wayland修改方法</h3>
-<p>Wayland并不能像xorg一样，修改配置文件，xinput命令也修改不了，根据arch wiki的说明，只能靠系统提供修改接口才行。</p>
-<p>可我就是要改</p>
-<p>我们还有一个必胜法：<code>/etc/udev/rules.d/libinput.rules</code>文件</p>
-<p>选定矩阵参数之后，可以通过如下命令修改：<br>
-<code>echo 'ENV{LIBINPUT_CALIBRATION_MATRIX}="-1 0 1 0 1 0 0 0 1"' > /etc/udev/rules.d/libinput.rules</code></p>
-<h2 id=evdev>Evdev</h2>
-<blockquote>
-<p>鉴于我并没有使用该方案，所以这里简单说一下，具体请自行查阅文档说其他说明</p>
-</blockquote>
-<h3 id=xorg>xorg</h3>
-<h4 id=临时修改测试效果-1>临时修改(测试效果)</h4>
-<p>跟libinput的类似，xorg可以通过xinput命令先测试，这里提供几个常见的：<br></p>
-<ul>
-<li>正常<br>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl> Section &#34;InputClass&#34;
+</span></span><span class=line><span class=cl>        Identifier &#34;libinput touchscreen catchall&#34;
+</span></span><span class=line><span class=cl>        Option &#34;CalibrationMatrix&#34; &#34;-1 0 1 0 1 0 0 0 1&#34;
+</span></span><span class=line><span class=cl>        MatchIsTouchscreen &#34;on&#34;
+</span></span><span class=line><span class=cl>        MatchDevicePath &#34;/dev/input/event*&#34;
+</span></span><span class=line><span class=cl>        Driver &#34;libinput&#34;
+</span></span><span class=line><span class=cl> EndSection
+</span></span></code></pre></td></tr></table></div></div><p>重启就生效了</p><h3 id=wayland修改方法>wayland修改方法</h3><p>Wayland并不能像xorg一样，修改配置文件，xinput命令也修改不了，根据arch wiki的说明，只能靠系统提供修改接口才行。</p><p>可我就是要改</p><p>我们还有一个必胜法：<code>/etc/udev/rules.d/libinput.rules</code>文件</p><p>选定矩阵参数之后，可以通过如下命令修改：<br><code>echo 'ENV{LIBINPUT_CALIBRATION_MATRIX}="-1 0 1 0 1 0 0 0 1"' > /etc/udev/rules.d/libinput.rules</code></p><h2 id=evdev>Evdev</h2><blockquote><p>鉴于我并没有使用该方案，所以这里简单说一下，具体请自行查阅文档说其他说明</p></blockquote><h3 id=xorg>xorg</h3><h4 id=临时修改测试效果-1>临时修改(测试效果)</h4><p>跟libinput的类似，xorg可以通过xinput命令先测试，这里提供几个常见的：<br></p><ul><li>正常<br><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 0, 0
-xinput set-prop 7 &#34;Evdev Axes Swap&#34; 0
-</code></pre></td></tr></table>
-</div>
-</div></li>
-<li>左旋转<br>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 0, 0
+</span></span><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axes Swap&#34; 0
+</span></span></code></pre></td></tr></table></div></div></li><li>左旋转<br><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 1, 0
-xinput set-prop 7 &#34;Evdev Axes Swap&#34; 1
-</code></pre></td></tr></table>
-</div>
-</div></li>
-<li>颠倒<br>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 1, 0
+</span></span><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axes Swap&#34; 1
+</span></span></code></pre></td></tr></table></div></div></li><li>颠倒<br><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 1, 1
-xinput set-prop 7 &#34;Evdev Axes Swap&#34; 0
-</code></pre></td></tr></table>
-</div>
-</div></li>
-<li>右旋转<br>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 1, 1
+</span></span><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axes Swap&#34; 0
+</span></span></code></pre></td></tr></table></div></div></li><li>右旋转<br><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 0, 1
-xinput set-prop 7 &#34;Evdev Axes Swap&#34; 1
-</code></pre></td></tr></table>
-</div>
-</div></li>
-</ul>
-<blockquote>
-<p>简单解释一下<br>
-<code>xinput set-prop 7 "Evdev Axes Swap" 1</code>的<code>7</code>是上面的<code>id=7</code>，<code>1</code>是“交换x轴和y轴”，如果是<code>0</code>就是不交换<br>
-<code>xinput set-prop 7 "Evdev Axis Inversion" 0, 1</code>的<code>0, 1</code>，第一个数字代表x轴，第二个数字代表y轴</p>
-</blockquote>
-<h4 id=持久化修改-1>持久化修改</h4>
-<p>跟libinput一样，也可以持久化，Evdev的配置文件，内容应该是这样的：<br></p>
-<div class=highlight><div class=chroma>
-<table class=lntable><tr><td class=lntd>
-<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axis Inversion&#34; 0, 1
+</span></span><span class=line><span class=cl>xinput set-prop 7 &#34;Evdev Axes Swap&#34; 1
+</span></span></code></pre></td></tr></table></div></div></li></ul><blockquote><p>简单解释一下<br><code>xinput set-prop 7 "Evdev Axes Swap" 1</code>的<code>7</code>是上面的<code>id=7</code>，<code>1</code>是“交换x轴和y轴”，如果是<code>0</code>就是不交换<br><code>xinput set-prop 7 "Evdev Axis Inversion" 0, 1</code>的<code>0, 1</code>，第一个数字代表x轴，第二个数字代表y轴</p></blockquote><h4 id=持久化修改-1>持久化修改</h4><p>跟libinput一样，也可以持久化，Evdev的配置文件，内容应该是这样的：<br></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span><span class=lnt>4
 </span><span class=lnt>5
 </span><span class=lnt>6
-</span></code></pre></td>
-<td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>Section &#34;InputClass&#34;
-        Identifier	&#34;calibration&#34;
-        MatchProduct	&#34;SYNA2393:00 06CB:19AC&#34;
-        Option	&#34;Calibration&#34;	&#34;2 3021 -7 2015&#34;
-        Option	&#34;SwapAxes&#34;	&#34;0&#34;
-EndSection
-</code></pre></td></tr></table>
-</div>
-</div><p>跟测试命令一样，修改里面的相应项就好了，因为我没有使用这个方案，所以比较粗糙，具体的请自行测试了</p>
-</div><div class=post-footer id=post-footer>
-<div class=post-info>
-<div class=post-info-line>
-<div class=post-info-mod>
-<span>更新于 2021-03-26</span>
-</div>
-<div class=post-info-license></div>
-</div>
-<div class=post-info-line>
-<div class=post-info-md></div>
-<div class=post-info-share>
-<span><a href=javascript:void(0); title="分享到 Twitter" data-sharer=twitter data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-via=a1153584840 data-hashtags=Linux><i class="fab fa-twitter fa-fw"></i></a><a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-hashtag=Linux><i class="fab fa-facebook-square fa-fw"></i></a><a href=javascript:void(0); title="分享到 WhatsApp" data-sharer=whatsapp data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href=javascript:void(0); title="分享到 Line" data-sharer=line data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转><i data-svg-src=/lib/simple-icons/icons/line.min.svg></i></a><a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转><i class="fab fa-weibo fa-fw"></i></a><a href=javascript:void(0); title="分享到 Myspace" data-sharer=myspace data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-description><i data-svg-src=/lib/simple-icons/icons/myspace.min.svg></i></a><a href=javascript:void(0); title="分享到 Blogger" data-sharer=blogger data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-description><i class="fab fa-blogger fa-fw"></i></a><a href=javascript:void(0); title="分享到 Evernote" data-sharer=evernote data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转><i class="fab fa-evernote fa-fw"></i></a></span>
-</div>
-</div>
-</div>
-<div class=post-info-more>
-<section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/linux/>Linux</a></section>
-<section>
-<span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span>
-</section>
-</div>
-<div class=post-nav><a href=/posts/build-the-blog/ class=prev rel=prev title=博客搭建指北><i class="fas fa-angle-left fa-fw"></i>博客搭建指北</a>
-<a href=/posts/aio-server/ class=next rel=next title=Aio服务器搭建>Aio服务器搭建<i class="fas fa-angle-right fa-fw"></i></a></div>
-</div>
-</article></div>
-</main><footer class=footer>
-<div class=footer-container><div class=footer-line>匠人の魂を探す</div><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2021</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>moexco</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
-</div>
-</footer></div>
-<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title=回到顶部>
-<i class="fas fa-arrow-up fa-fw"></i>
-</a><a href=# id=view-comments class=fixed-button title=查看评论>
-<i class="fas fa-comment fa-fw"></i>
-</a>
-</div><script type=text/javascript src=/lib/smooth-scroll/smooth-scroll.min.js></script><script type=text/javascript src=/lib/lazysizes/lazysizes.min.js></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript src=/lib/sharer/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
-</html>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>Section &#34;InputClass&#34;
+</span></span><span class=line><span class=cl>        Identifier	&#34;calibration&#34;
+</span></span><span class=line><span class=cl>        MatchProduct	&#34;SYNA2393:00 06CB:19AC&#34;
+</span></span><span class=line><span class=cl>        Option	&#34;Calibration&#34;	&#34;2 3021 -7 2015&#34;
+</span></span><span class=line><span class=cl>        Option	&#34;SwapAxes&#34;	&#34;0&#34;
+</span></span><span class=line><span class=cl>EndSection
+</span></span></code></pre></td></tr></table></div></div><p>跟测试命令一样，修改里面的相应项就好了，因为我没有使用这个方案，所以比较粗糙，具体的请自行测试了</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2021-03-26</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 Twitter" data-sharer=twitter data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-via=xco_moe data-hashtags=Linux><i class="fab fa-twitter fa-fw"></i></a><a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-hashtag=Linux><i class="fab fa-facebook-square fa-fw"></i></a><a href=javascript:void(0); title="分享到 WhatsApp" data-sharer=whatsapp data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href=javascript:void(0); title="分享到 Line" data-sharer=line data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转><i data-svg-src=/lib/simple-icons/icons/line.min.svg></i></a><a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转><i class="fab fa-weibo fa-fw"></i></a><a href=javascript:void(0); title="分享到 Myspace" data-sharer=myspace data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-description><i data-svg-src=/lib/simple-icons/icons/myspace.min.svg></i></a><a href=javascript:void(0); title="分享到 Blogger" data-sharer=blogger data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转 data-description><i class="fab fa-blogger fa-fw"></i></a><a href=javascript:void(0); title="分享到 Evernote" data-sharer=evernote data-url=https://moexco.github.io/posts/linux-touch-screen-rotation/ data-title=Linux触屏旋转><i class="fab fa-evernote fa-fw"></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/linux/>Linux</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/build-the-blog/ class=prev rel=prev title=博客搭建指北><i class="fas fa-angle-left fa-fw"></i>博客搭建指北</a>
+<a href=/posts/aio-server/ class=next rel=next title=Aio服务器搭建>Aio服务器搭建<i class="fas fa-angle-right fa-fw"></i></a></div></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line>匠人の魂を探す</div><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2021 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>moexco</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw"></i>
+</a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw"></i></a></div><script type=text/javascript src=/lib/smooth-scroll/smooth-scroll.min.js></script><script type=text/javascript src=/lib/lazysizes/lazysizes.min.js></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript src=/lib/sharer/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>
