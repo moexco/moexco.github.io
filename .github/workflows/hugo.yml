@@ -18,7 +18,7 @@ jobs:
         uses: peaceiris/actions-hugo@v2
         with:
           hugo-version: 'latest'
-          # extended: true
+          extended: true
 
       - name: Build
         run: hugo --minify
@@ -26,6 +26,6 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.HUGO_BUILD_TOKEN }}
+          github_token: ${{ secrets.NEW_HUGO_BUILD_TOKEN }}
           PUBLISH_BRANCH: main
           publish_dir: ./public
