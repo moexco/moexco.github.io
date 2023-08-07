@@ -1,0 +1,593 @@
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><meta http-equiv=x-ua-compatible content="IE=edge, chrome=1"><title>记一次Rust静态编译 - たったの部屋</title><meta name=Description content><meta property="og:title" content="记一次Rust静态编译"><meta property="og:description" content="前景提要 Rust这门语言出了名的难学难懂，我也是前前后后多次企图入坑又多次不了了之，一直到前段时间才真的用Rust写一些东西，在这之前，我接"><meta property="og:type" content="article"><meta property="og:url" content="https://moexco.github.io/posts/rust_build_musl/"><meta property="og:image" content="https://moexco.github.io/avatar.png"><meta property="article:section" content="posts"><meta property="article:published_time" content="2023-08-07T21:35:05+08:00"><meta property="article:modified_time" content="2023-08-07T21:35:05+08:00"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://moexco.github.io/avatar.png"><meta name=twitter:title content="记一次Rust静态编译"><meta name=twitter:description content="前景提要 Rust这门语言出了名的难学难懂，我也是前前后后多次企图入坑又多次不了了之，一直到前段时间才真的用Rust写一些东西，在这之前，我接"><meta name=application-name content="たったの部屋"><meta name=apple-mobile-web-app-title content="たったの部屋"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://moexco.github.io/posts/rust_build_musl/><link rel=prev href=https://moexco.github.io/posts/aio-server/><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=/lib/fontawesome-free/all.min.css><link rel=stylesheet href=/lib/animate/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"记一次Rust静态编译","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/moexco.github.io\/posts\/rust_build_musl\/"},"genre":"posts","keywords":"Rust","wordcount":4060,"url":"https:\/\/moexco.github.io\/posts\/rust_build_musl\/","datePublished":"2023-08-07T21:35:05+08:00","dateModified":"2023-08-07T21:35:05+08:00","publisher":{"@type":"Organization","name":"moexco"},"author":{"@type":"Person","name":"moexco"},"description":""}</script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":""==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:""==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=たったの部屋>たったの部屋</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/categories/>分类 </a><span class="menu-item delimiter"></span><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw"></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=たったの部屋>たったの部屋</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw"></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animated flipInX">记一次Rust静态编译</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw"></i>moexco</a></span>&nbsp;<span class=post-category>收录于 <a href=/categories/rust/><i class="far fa-folder fa-fw"></i>Rust</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2023-08-07>2023-08-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 4060 字&nbsp;
+<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 9 分钟&nbsp;</div></div><div class="details toc" id=toc-static kept><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#前景提要>前景提要</a></li><li><a href=#情景还原>情景还原</a><ul><li><a href=#开发环境>开发环境</a></li><li><a href=#模拟程序>模拟程序</a></li></ul></li><li><a href=#踩坑>踩坑</a><ul><li><a href=#似乎是找不到依赖路径>似乎是找不到依赖路径</a></li><li><a href=#似乎是链接器错误>似乎是链接器错误</a></li><li><a href=#求助交叉编译新星-zig-cc>求助交叉编译新星 <code>zig cc</code></a></li></ul></li><li><a href=#解决方案>解决方案</a><ul><li><a href=#方案一切换rustls>方案一：切换rustls</a></li><li><a href=#方案二找到原因>方案二：找到原因</a><ul><li><a href=#结论>结论</a></li></ul></li></ul></li><li><a href=#写在最后>写在最后</a></li></ul></nav></div></div><div class=content id=content><p><img class=lazyload src=/svg/loading.min.svg data-src=/rust_build_musl/202308_110505636.jpg data-srcset="/rust_build_musl/202308_110505636.jpg, /rust_build_musl/202308_110505636.jpg 1.5x, /rust_build_musl/202308_110505636.jpg 2x" data-sizes=auto alt=/rust_build_musl/202308_110505636.jpg title="miku镇楼 pid:110505636"></p><h2 id=前景提要>前景提要</h2><p>Rust这门语言出了名的难学难懂，我也是前前后后多次企图入坑又多次不了了之，一直到前段时间才真的用Rust写一些东西，在这之前，我接触过的语言也偏大众，像Java、Python、C等，最近使用最多的则是Go。</p><p>在Go的影响下，我更喜欢用标准库的习惯，给我的Rust开发带来了不少麻烦，如果说Go的标准库是一个工具箱，什么都带一点的话，Rust则是有但不多，HashMap这些是存在的，但Regex正则这些是不存在的。</p><p>与此同时，Rust的包管理和项目管理是非常成熟且完善的，尽管go也提供一整套的命令和工具，但使用上的区别还是非常明显的，这也是我这次Rust静态链接踩坑的主要原因。</p><h2 id=情景还原>情景还原</h2><p>虽然是一个踩坑记录，但是原始程序已经编译好了，这里仅模拟踩坑全过程。</p><h3 id=开发环境>开发环境</h3><ul><li>系统：<code>ArchLinux</code> <del>即Glibc环境</del></li><li>版本：<code>rustc 1.71.1</code> <del>实际开发使用的是nightly</del></li></ul><h3 id=模拟程序>模拟程序</h3><ul><li>主程序</li></ul><p>模拟程序内容不重要，重要的是用上个第三方包，比方说<code>reqwest</code></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=k>fn</span> <span class=nf>main</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>let</span><span class=w> </span><span class=n>body</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>reqwest</span>::<span class=n>blocking</span>::<span class=n>get</span><span class=p>(</span><span class=s>&#34;https://www.rust-lang.org&#34;</span><span class=p>).</span><span class=n>unwrap</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>.</span><span class=n>text</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=fm>println!</span><span class=p>(</span><span class=s>&#34;body = </span><span class=si>{:?}</span><span class=s>&#34;</span><span class=p>,</span><span class=w> </span><span class=n>body</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><ul><li>Cargo.toml内容</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-toml data-lang=toml><span class=line><span class=cl><span class=p>[</span><span class=nx>package</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>name</span> <span class=p>=</span> <span class=s2>&#34;hello&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.1.0&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>edition</span> <span class=p>=</span> <span class=s2>&#34;2021&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c># See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>[</span><span class=nx>dependencies</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>reqwest</span> <span class=p>=</span> <span class=p>{</span> <span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.11.18&#34;</span><span class=p>,</span> <span class=nx>features</span> <span class=p>=</span> <span class=p>[</span><span class=s2>&#34;json&#34;</span><span class=p>,</span> <span class=s2>&#34;blocking&#34;</span><span class=p>]</span> <span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=踩坑>踩坑</h2><p><code>cargo build --release</code>打包程序，然后丢给别人运行，跑不起来，问了一下环境，<code>alpine</code>，好家伙，<code>musl</code>，这我熟，在Go经常遇到<code>glibc</code>动态链接的程序无法在<code>musl</code>上运行的情况了，一个静态链接就解决了嘛。</p><p>但是问题来了，不同于Go重写了runtime，rust是依赖libc的，所以rust想要完全静态链接就必须抛弃<code>glibc</code>，选择<code>musl</code>，好在rust交叉编译不是什么难事，说干就干。</p><h3 id=似乎是找不到依赖路径>似乎是找不到依赖路径</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-sh data-lang=sh><span class=line><span class=cl>rustup target add x86_64-unknown-linux-musl
+</span></span><span class=line><span class=cl>pacman -Sy musl
+</span></span><span class=line><span class=cl>cargo build --target x86_64-unknown-linux-musl --release
+</span></span></code></pre></td></tr></table></div></div><p>一套连招一气呵成，然后rust就给我当头一棒</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
+</span><span class=lnt>84
+</span><span class=lnt>85
+</span><span class=lnt>86
+</span><span class=lnt>87
+</span><span class=lnt>88
+</span><span class=lnt>89
+</span><span class=lnt>90
+</span><span class=lnt>91
+</span><span class=lnt>92
+</span><span class=lnt>93
+</span><span class=lnt>94
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-sh data-lang=sh><span class=line><span class=cl>   Compiling libc v0.2.147
+</span></span><span class=line><span class=cl>   Compiling autocfg v1.1.0
+</span></span><span class=line><span class=cl>   Compiling vcpkg v0.2.15
+</span></span><span class=line><span class=cl>   Compiling pkg-config v0.3.27
+</span></span><span class=line><span class=cl>   Compiling proc-macro2 v1.0.66
+</span></span><span class=line><span class=cl>   Compiling cfg-if v1.0.0
+</span></span><span class=line><span class=cl>   Compiling once_cell v1.18.0
+</span></span><span class=line><span class=cl>   Compiling pin-project-lite v0.2.11
+</span></span><span class=line><span class=cl>   Compiling bytes v1.4.0
+</span></span><span class=line><span class=cl>   Compiling futures-core v0.3.28
+</span></span><span class=line><span class=cl>   Compiling unicode-ident v1.0.11
+</span></span><span class=line><span class=cl>   Compiling tokio v1.29.1
+</span></span><span class=line><span class=cl>   Compiling cc v1.0.82
+</span></span><span class=line><span class=cl>   Compiling itoa v1.0.9
+</span></span><span class=line><span class=cl>   Compiling mio v0.8.8
+</span></span><span class=line><span class=cl>   Compiling num_cpus v1.16.0
+</span></span><span class=line><span class=cl>   Compiling quote v1.0.32
+</span></span><span class=line><span class=cl>   Compiling socket2 v0.4.9
+</span></span><span class=line><span class=cl>   Compiling slab v0.4.8
+</span></span><span class=line><span class=cl>   Compiling futures-task v0.3.28
+</span></span><span class=line><span class=cl>   Compiling memchr v2.5.0
+</span></span><span class=line><span class=cl>   Compiling syn v2.0.28
+</span></span><span class=line><span class=cl>   Compiling indexmap v1.9.3
+</span></span><span class=line><span class=cl>   Compiling tracing-core v0.1.31
+</span></span><span class=line><span class=cl>   Compiling futures-util v0.3.28
+</span></span><span class=line><span class=cl>   Compiling foreign-types-shared v0.1.1
+</span></span><span class=line><span class=cl>   Compiling openssl v0.10.56
+</span></span><span class=line><span class=cl>   Compiling fnv v1.0.7
+</span></span><span class=line><span class=cl>   Compiling http v0.2.9
+</span></span><span class=line><span class=cl>   Compiling tracing v0.1.37
+</span></span><span class=line><span class=cl>   Compiling foreign-types v0.3.2
+</span></span><span class=line><span class=cl>   Compiling openssl-sys v0.9.91
+</span></span><span class=line><span class=cl>   Compiling serde v1.0.183
+</span></span><span class=line><span class=cl>   Compiling futures-io v0.3.28
+</span></span><span class=line><span class=cl>   Compiling futures-sink v0.3.28
+</span></span><span class=line><span class=cl>error: failed to run custom build <span class=nb>command</span> <span class=k>for</span> <span class=sb>`</span>openssl-sys v0.9.91<span class=sb>`</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Caused by:
+</span></span><span class=line><span class=cl>  process didn<span class=s1>&#39;t exit successfully: `/root/hello/target/debug/build/openssl-sys-04208c1c308a778d/build-script-main` (exit status: 101)
+</span></span></span><span class=line><span class=cl><span class=s1>  --- stdout
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=X86_64_UNKNOWN_LINUX_MUSL_OPENSSL_LIB_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  X86_64_UNKNOWN_LINUX_MUSL_OPENSSL_LIB_DIR unset
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=OPENSSL_LIB_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  OPENSSL_LIB_DIR unset
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=X86_64_UNKNOWN_LINUX_MUSL_OPENSSL_INCLUDE_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  X86_64_UNKNOWN_LINUX_MUSL_OPENSSL_INCLUDE_DIR unset
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=OPENSSL_INCLUDE_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  OPENSSL_INCLUDE_DIR unset
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=X86_64_UNKNOWN_LINUX_MUSL_OPENSSL_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  X86_64_UNKNOWN_LINUX_MUSL_OPENSSL_DIR unset
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=OPENSSL_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  OPENSSL_DIR unset
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=OPENSSL_NO_PKG_CONFIG
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_ALLOW_CROSS_x86_64-unknown-linux-musl
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_ALLOW_CROSS_x86_64_unknown_linux_musl
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=TARGET_PKG_CONFIG_ALLOW_CROSS
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_ALLOW_CROSS
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64-unknown-linux-musl
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64_unknown_linux_musl
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=TARGET_PKG_CONFIG
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64-unknown-linux-musl
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64_unknown_linux_musl
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=TARGET_PKG_CONFIG_SYSROOT_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+</span></span></span><span class=line><span class=cl><span class=s1>  run pkg_config fail: pkg-config has not been configured to support cross-compilation.
+</span></span></span><span class=line><span class=cl><span class=s1>
+</span></span></span><span class=line><span class=cl><span class=s1>  Install a sysroot for the target platform and configure it via
+</span></span></span><span class=line><span class=cl><span class=s1>  PKG_CONFIG_SYSROOT_DIR and PKG_CONFIG_PATH, or install a
+</span></span></span><span class=line><span class=cl><span class=s1>  cross-compiling wrapper for pkg-config and set it via
+</span></span></span><span class=line><span class=cl><span class=s1>  PKG_CONFIG environment variable.
+</span></span></span><span class=line><span class=cl><span class=s1>
+</span></span></span><span class=line><span class=cl><span class=s1>  --- stderr
+</span></span></span><span class=line><span class=cl><span class=s1>  thread &#39;</span>main<span class=s1>&#39; panicked at &#39;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  Could not find directory of OpenSSL installation, and this <span class=sb>`</span>-sys<span class=sb>`</span> crate cannot
+</span></span><span class=line><span class=cl>  proceed without this knowledge. If OpenSSL is installed and this crate had
+</span></span><span class=line><span class=cl>  trouble finding it,  you can <span class=nb>set</span> the <span class=sb>`</span>OPENSSL_DIR<span class=sb>`</span> environment variable <span class=k>for</span> the
+</span></span><span class=line><span class=cl>  compilation process.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  Make sure you also have the development packages of openssl installed.
+</span></span><span class=line><span class=cl>  For example, <span class=sb>`</span>libssl-dev<span class=sb>`</span> on Ubuntu or <span class=sb>`</span>openssl-devel<span class=sb>`</span> on Fedora.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  If you<span class=s1>&#39;re in a situation where you think the directory *should* be found
+</span></span></span><span class=line><span class=cl><span class=s1>  automatically, please open a bug at https://github.com/sfackler/rust-openssl
+</span></span></span><span class=line><span class=cl><span class=s1>  and include information about your system as well as this message.
+</span></span></span><span class=line><span class=cl><span class=s1>
+</span></span></span><span class=line><span class=cl><span class=s1>  $HOST = x86_64-unknown-linux-gnu
+</span></span></span><span class=line><span class=cl><span class=s1>  $TARGET = x86_64-unknown-linux-musl
+</span></span></span><span class=line><span class=cl><span class=s1>  openssl-sys = 0.9.91
+</span></span></span><span class=line><span class=cl><span class=s1>
+</span></span></span><span class=line><span class=cl><span class=s1>  &#39;</span>, /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/openssl-sys-0.9.91/build/find_normal.rs:190:5
+</span></span><span class=line><span class=cl>  note: run with <span class=sb>`</span><span class=nv>RUST_BACKTRACE</span><span class=o>=</span>1<span class=sb>`</span> environment variable to display a backtrace
+</span></span><span class=line><span class=cl>warning: build failed, waiting <span class=k>for</span> other <span class=nb>jobs</span> to finish...
+</span></span></code></pre></td></tr></table></div></div><p>考虑到我<code>openssl</code>肯定是安装了的，系统里也有，我就把环境变量给它</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-sh data-lang=sh><span class=line><span class=cl><span class=nv>OPENSSL_DIR</span><span class=o>=</span>/usr/include <span class=nv>OPENSSL_LIB_DIR</span><span class=o>=</span>/usr/lib <span class=nv>OPENSSL_INCLUDE_DIR</span><span class=o>=</span>/usr/include cargo build --target<span class=o>=</span>x86_64-unknown-linux-musl
+</span></span></code></pre></td></tr></table></div></div><p>显然我理解的方向是错误的，并没有就这样编译通过</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-sh data-lang=sh><span class=line><span class=cl>   Compiling openssl-sys v0.9.91
+</span></span><span class=line><span class=cl>   Compiling openssl-macros v0.1.1
+</span></span><span class=line><span class=cl>   Compiling tinyvec_macros v0.1.1
+</span></span><span class=line><span class=cl>   Compiling pin-utils v0.1.0
+</span></span><span class=line><span class=cl>   Compiling bitflags v1.3.2
+</span></span><span class=line><span class=cl>   Compiling hashbrown v0.12.3
+</span></span><span class=line><span class=cl>   Compiling openssl v0.10.56
+</span></span><span class=line><span class=cl>   Compiling futures-channel v0.3.28
+</span></span><span class=line><span class=cl>   Compiling native-tls v0.2.11
+</span></span><span class=line><span class=cl>   Compiling httparse v1.8.0
+</span></span><span class=line><span class=cl>   Compiling serde v1.0.183
+</span></span><span class=line><span class=cl>   Compiling futures-util v0.3.28
+</span></span><span class=line><span class=cl>   Compiling tinyvec v1.6.0
+</span></span><span class=line><span class=cl>   Compiling tokio-util v0.7.8
+</span></span><span class=line><span class=cl>   Compiling indexmap v1.9.3
+</span></span><span class=line><span class=cl>   Compiling log v0.4.19
+</span></span><span class=line><span class=cl>   Compiling try-lock v0.2.4
+</span></span><span class=line><span class=cl>   Compiling openssl-probe v0.1.5
+</span></span><span class=line><span class=cl>   Compiling percent-encoding v2.3.0
+</span></span><span class=line><span class=cl>   Compiling unicode-normalization v0.1.22
+</span></span><span class=line><span class=cl>   Compiling want v0.3.1
+</span></span><span class=line><span class=cl>   Compiling form_urlencoded v1.2.0
+</span></span><span class=line><span class=cl>   Compiling http-body v0.4.5
+</span></span><span class=line><span class=cl>   Compiling httpdate v1.0.2
+</span></span><span class=line><span class=cl>   Compiling tower-service v0.3.2
+</span></span><span class=line><span class=cl>   Compiling serde_json v1.0.104
+</span></span><span class=line><span class=cl>   Compiling unicode-bidi v0.3.13
+</span></span><span class=line><span class=cl>   Compiling ryu v1.0.15
+</span></span><span class=line><span class=cl>   Compiling idna v0.4.0
+</span></span><span class=line><span class=cl>   Compiling encoding_rs v0.8.32
+</span></span><span class=line><span class=cl>   Compiling h2 v0.3.20
+</span></span><span class=line><span class=cl>   Compiling url v2.4.0
+</span></span><span class=line><span class=cl>   Compiling mime v0.3.17
+</span></span><span class=line><span class=cl>   Compiling tokio-native-tls v0.3.1
+</span></span><span class=line><span class=cl>   Compiling serde_urlencoded v0.7.1
+</span></span><span class=line><span class=cl>   Compiling base64 v0.21.2
+</span></span><span class=line><span class=cl>   Compiling ipnet v2.8.0
+</span></span><span class=line><span class=cl>   Compiling hyper v0.14.27
+</span></span><span class=line><span class=cl>   Compiling hyper-tls v0.5.0
+</span></span><span class=line><span class=cl>   Compiling reqwest v0.11.18
+</span></span><span class=line><span class=cl>   Compiling hello v0.1.0 <span class=o>(</span>/root/hello<span class=o>)</span>
+</span></span><span class=line><span class=cl>error: linking with <span class=sb>`</span>cc<span class=sb>`</span> failed: <span class=nb>exit</span> status: <span class=m>1</span>
+</span></span><span class=line><span class=cl>  <span class=p>|</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: <span class=nv>LC_ALL</span><span class=o>=</span><span class=s2>&#34;C&#34;</span> <span class=nv>PATH</span><span class=o>=</span><span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin:/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/self-contained:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#34;</span> <span class=nv>VSLANG</span><span class=o>=</span><span class=s2>&#34;1033&#34;</span> <span class=s2>&#34;cc&#34;</span> <span class=s2>&#34;-m64&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/rcrt1.o&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/crti.o&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/crtbeginS.o&#34;</span> <span class=s2>&#34;/tmp/rustcaDaF3l/symbols.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.1lmq1ouv58w3rwz.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.1yizfmm3nj5x3q7w.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.2nzud2ndcojz7uk2.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.3a55l8llsp3r2tcl.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.4ok09fnd53o40xs8.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.4y92ixbrkcvb8jys.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.57guh5q81h8sa6ag.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.5cdk9g0lv2noid4s.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.5g88t7k0ybyitp8h.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.dh08tp5wn056bn5.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.dqlvcrgqkc7ceom.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.hiecjvjjv53un8g.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.zjk48m8k5yuqax7.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.3bzdcys5ws4an6mz.rcgu.o&#34;</span> <span class=s2>&#34;-Wl,--as-needed&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/hello/target/debug/deps&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/usr/lib&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib&#34;</span> <span class=s2>&#34;-Wl,-Bstatic&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libreqwest-a4928d2796b7a20a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhyper_tls-6adcb3f682fd63be.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbase64-f032cdc26b2188fd.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libipnet-9fcf7a1b05f70428.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio_native_tls-84d0836c10c03084.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde_urlencoded-12f3954529516483.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmime-61cb5f21eb43cd09.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libencoding_rs-7191fbee27b32ca8.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde_json-b7863fea1f06fdc2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libryu-eb41dd4558394161.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde-b1bc13ea6b13e86a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libnative_tls-8cc19a344b2b97ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl_probe-33c3113c2ab0c38a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl-878c34367adf445f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbitflags-a35fc4f5e760ae0c.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libforeign_types-344debc7b4283ac5.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libforeign_types_shared-d4b5ae7f9901e3ef.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl_sys-d44d47f3a15f4314.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhyper-ad505ff30a83f00f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libwant-da6c59dcd2b430e8.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtry_lock-63e33292a4cab6b7.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttparse-86bb3be05875b2be.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libh2-86a6152341939650.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libindexmap-700fb0f243cbf770.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhashbrown-3e2a8dddddd69e47.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio_util-01f3c807bcba0656.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_sink-47ab71e3b2a9d652.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtower_service-55f09582429b3ad2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtracing-22c55ea82046148d.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libcfg_if-763b1ddbb00ab312.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtracing_core-8b484e32d3a618dc.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libonce_cell-df35a5bc77e9bad2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_channel-b3ab7d62489521ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio-0a1f54475be772d7.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libnum_cpus-ed3c6a13d6ca91c3.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libsocket2-37ebd4a8a7b2d956.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmio-2908ea1e129c91b6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liblibc-4a181a3269fd660d.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttp_body-b0a126980fc702e6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liblog-343afbef5c0c4dc0.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_util-95f015b9173c8184.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmemchr-f2f0db64792846a0.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_io-814bd2be1702f58b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libslab-7b5ee7683556de32.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpin_project_lite-f0335dd74864094f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_task-834669506822b441.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpin_utils-e9460a26d7509d0b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_core-59d6481d783432fe.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liburl-72c7256e70d64cc4.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libidna-f828dd91a3024d62.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libunicode_normalization-12be77ce4e4ef380.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtinyvec-ac95596c2aa9b76c.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtinyvec_macros-40bbf77c062383ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libunicode_bidi-3e4ce736fb98ad05.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libform_urlencoded-8a01bf4df8ff1a6b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpercent_encoding-efe5dc91ab199535.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttp-caefd3ce726da4f6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libitoa-6b7a72b344370fc1.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbytes-db81abd5b66cf450.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfnv-7fa02a81681331dc.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd-493936ddc336b3cf.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libpanic_unwind-3dd70cbadf3e1002.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libobject-3558ee77f8b1ad74.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libmemchr-10f2552578618c97.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libaddr2line-7b520da5a73d1918.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libgimli-3702969c0e889474.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_demangle-c0cc4c329ee15590.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd_detect-874514dffe09e03c.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libhashbrown-e3f573f6d5b58355.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_std_workspace_alloc-85dc525393d56c52.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libminiz_oxide-36ca93bbf21bf97c.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains
+</span></span></span><span class=line><span class=cl><span class=s2>/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libadler-1041082638612281.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libunwind-e11982fd4ee76f53.rlib&#34;</span> <span class=s2>&#34;-lunwind&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcfg_if-78634847bd9095da.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/liblibc-930f912cc77d37c5.rlib&#34;</span> <span class=s2>&#34;-lc&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/liballoc-8cc0612c0889f762.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_std_workspace_core-918df048a2f8e1f4.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcore-d1705156e6561f5f.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcompiler_builtins-9ad5603f71a0f0cc.rlib&#34;</span> <span class=s2>&#34;-Wl,-Bdynamic&#34;</span> <span class=s2>&#34;-lssl&#34;</span> <span class=s2>&#34;-lcrypto&#34;</span> <span class=s2>&#34;-Wl,--eh-frame-hdr&#34;</span> <span class=s2>&#34;-Wl,-z,noexecstack&#34;</span> <span class=s2>&#34;-nostartfiles&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained&#34;</span> <span class=s2>&#34;-o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475&#34;</span> <span class=s2>&#34;-Wl,--gc-sections&#34;</span> <span class=s2>&#34;-static-pie&#34;</span> <span class=s2>&#34;-Wl,-z,relro,-z,now&#34;</span> <span class=s2>&#34;-nodefaultlibs&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/crtendS.o&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/crtn.o&#34;</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: /usr/sbin/ld: /root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd-493936ddc336b3cf.rlib<span class=o>(</span>std-493936ddc336b3cf.std.7b49138af54fd575-cgu.0.rcgu.o<span class=o>)</span>: in <span class=k>function</span> <span class=sb>`</span>std::sys::unix::os::home_dir::fallback<span class=s1>&#39;:
+</span></span></span><span class=line><span class=cl><span class=s1>          /rustc/eb26296b556cef10fb713a38f3d16b9886080f26/library/std/src/sys/unix/os.rs:642:(.text._ZN3std3env8home_dir17h451fdab77b1c257fE+0xc9): warning: Using &#39;</span>getpwuid_r<span class=s1>&#39; in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
+</span></span></span><span class=line><span class=cl><span class=s1>          /usr/sbin/ld: /root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd-493936ddc336b3cf.rlib(std-493936ddc336b3cf.std.7b49138af54fd575-cgu.0.rcgu.o): in function `&lt;std::sys_common::net::LookupHost as core::convert::TryFrom&lt;(&amp;str,u16)&gt;&gt;::try_from::{{closure}}&#39;</span>:
+</span></span><span class=line><span class=cl>          /rustc/eb26296b556cef10fb713a38f3d16b9886080f26/library/std/src/sys_common/net.rs:206:<span class=o>(</span>.text._ZN104_<span class=nv>$LT$std</span>..sys_common..net..LookupHost<span class=nv>$u20$as$u20$core</span>..convert..TryFrom<span class=nv>$LT$$</span>LP<span class=nv>$$</span>RF<span class=nv>$str$C$u16$RP$$</span>GT<span class=nv>$$</span>GT<span class=nv>$8</span>try_from28_<span class=nv>$u7b$$</span>u7b<span class=nv>$closure$u7d$$</span>u7d<span class=nv>$17</span>h2fd855f3da3ccc3cE+0x5c<span class=o>)</span>: warning: Using <span class=s1>&#39;getaddrinfo&#39;</span> in statically linked applications requires at runtime the shared libraries from the glibc version used <span class=k>for</span> linking
+</span></span><span class=line><span class=cl>          /usr/sbin/ld: /root/hello/target/x86_64-unknown-linux-musl/debug/deps/libreqwest-a4928d2796b7a20a.rlib<span class=o>(</span>reqwest-a4928d2796b7a20a.reqwest.db4bc6ec345dcfb4-cgu.14.rcgu.o<span class=o>)</span>: undefined reference to symbol <span class=s1>&#39;__tls_get_addr@@GLIBC_2.3&#39;</span>
+</span></span><span class=line><span class=cl>          /usr/sbin/ld: /usr/lib/ld-linux-x86-64.so.2: error adding symbols: DSO missing from <span class=nb>command</span> line
+</span></span><span class=line><span class=cl>          collect2: error: ld returned <span class=m>1</span> <span class=nb>exit</span> <span class=nv>status</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: some <span class=sb>`</span>extern<span class=sb>`</span> functions couldn<span class=err>&#39;</span>t be found<span class=p>;</span> some native libraries may need to be installed or have their path <span class=nv>specified</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: use the <span class=sb>`</span>-l<span class=sb>`</span> flag to specify native libraries to <span class=nv>link</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: use the <span class=sb>`</span>cargo:rustc-link-lib<span class=sb>`</span> directive to specify the native libraries to link with Cargo <span class=o>(</span>see https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-link-libkindname<span class=o>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>error: could not compile <span class=sb>`</span>hello<span class=sb>`</span> <span class=o>(</span>bin <span class=s2>&#34;hello&#34;</span><span class=o>)</span> due to previous error
+</span></span></code></pre></td></tr></table></div></div><h3 id=似乎是链接器错误>似乎是链接器错误</h3><p><code>cc</code>链接器？网上一通搜索，要指定<code>musl-gcc</code>，这还不简单</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-sh data-lang=sh><span class=line><span class=cl><span class=nv>CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER</span><span class=o>=</span>musl-gcc <span class=nv>CC_x86_64_unknown_linux_musl</span><span class=o>=</span>musl-gcc <span class=nv>CC</span><span class=o>=</span>musl-gcc <span class=nv>OPENSSL_DIR</span><span class=o>=</span>/usr/include <span class=nv>OPENSSL_LIB_DIR</span><span class=o>=</span>/usr/lib <span class=nv>OPENSSL_INCLUDE_DIR</span><span class=o>=</span>/usr/include cargo build --target<span class=o>=</span>x86_64-unknown-linux-musl
+</span></span></code></pre></td></tr></table></div></div><p>结果和上面没有什么区别，只是<code>cc</code>变成了<code>musl-gcc</code>，显然我的努力方向有问题，搜索了不少这方面的文章帖子，要么是没遇到什么问题就成功了，要么是折腾无解后选择在容器里编译</p><blockquote><p>诸如社区<code>cross</code>方案我也使用过，编译依旧是报错，为了排除我项目代码的问题，我新建了一个<code>alpine</code>容器，在里面运行了<code>cargo build --release</code>没有问题，确认了是我交叉编译姿势有问题，不过这里的编译只是动态链接，<code>ldd</code>下依旧能看到依赖性，因为文件已经删除，就不展示了</p></blockquote><h3 id=求助交叉编译新星-zig-cc>求助交叉编译新星 <code>zig cc</code></h3><p>放弃是不可能放弃的，我又搜到了一个使用<code>zig</code>完成编译的帖子，zig cc是zig团队给zig开发的一个全新的c编译器，传说中口碑极好，据说<code>uber</code>甚至投资zig团队让他们优先处理uber在使用zig cc上遇到的问题</p><p>我立刻把zig安排上了，<code>pacman -Sy zig</code></p><p>然后根据帖子的内容，新建一个内容，为zig cc指定编译目标</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=line><span class=cl><span class=cp>#!/bin/sh
+</span></span></span><span class=line><span class=cl><span class=cp></span>zig cc  -target x86_64-linux-musl <span class=nv>$@</span>
+</span></span></code></pre></td></tr></table></div></div><p>并且在项目里新建<code>./.cargo/config.toml</code>，用来配置编译相关项，在其中配置</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=line><span class=cl><span class=nv>rustflags</span> <span class=o>=</span> <span class=o>[</span><span class=s2>&#34;-C&#34;</span>, <span class=s2>&#34;linker-flavor=gcc&#34;</span>, <span class=s2>&#34;-C&#34;</span>, <span class=s2>&#34;link-self-contained=no&#34;</span><span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>linker</span> <span class=o>=</span> <span class=s2>&#34;zcc-x64-linux&#34;</span>
+</span></span></code></pre></td></tr></table></div></div><p>接着就是一个编译，<code>CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=/root/zcc CC_x86_64_unknown_linux_musl=/root/zcc CC=/root/zcc OPENSSL_DIR=/usr/include OPENSSL_LIB_DIR=/usr/lib OPENSSL_INCLUDE_DIR=/usr/include cargo build --target=x86_64-unknown-linux-musl</code></p><p>但奇迹并没有发生，它还是报错了</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=line><span class=cl>   Compiling cfg-if v1.0.0
+</span></span><span class=line><span class=cl>   Compiling once_cell v1.18.0
+</span></span><span class=line><span class=cl>   Compiling libc v0.2.147
+</span></span><span class=line><span class=cl>   Compiling pin-project-lite v0.2.11
+</span></span><span class=line><span class=cl>   Compiling bytes v1.4.0
+</span></span><span class=line><span class=cl>   Compiling itoa v1.0.9
+</span></span><span class=line><span class=cl>   Compiling futures-core v0.3.28
+</span></span><span class=line><span class=cl>   Compiling foreign-types-shared v0.1.1
+</span></span><span class=line><span class=cl>   Compiling fnv v1.0.7
+</span></span><span class=line><span class=cl>   Compiling foreign-types v0.3.2
+</span></span><span class=line><span class=cl>   Compiling tracing-core v0.1.31
+</span></span><span class=line><span class=cl>   Compiling slab v0.4.8
+</span></span><span class=line><span class=cl>   Compiling memchr v2.5.0
+</span></span><span class=line><span class=cl>   Compiling futures-task v0.3.28
+</span></span><span class=line><span class=cl>   Compiling tinyvec_macros v0.1.1
+</span></span><span class=line><span class=cl>   Compiling bitflags v1.3.2
+</span></span><span class=line><span class=cl>   Compiling futures-io v0.3.28
+</span></span><span class=line><span class=cl>   Compiling http v0.2.9
+</span></span><span class=line><span class=cl>   Compiling socket2 v0.4.9
+</span></span><span class=line><span class=cl>   Compiling num_cpus v1.16.0
+</span></span><span class=line><span class=cl>   Compiling mio v0.8.8
+</span></span><span class=line><span class=cl>   Compiling tokio v1.29.1
+</span></span><span class=line><span class=cl>   Compiling tracing v0.1.37
+</span></span><span class=line><span class=cl>   Compiling openssl-sys v0.9.91
+</span></span><span class=line><span class=cl>   Compiling hashbrown v0.12.3
+</span></span><span class=line><span class=cl>   Compiling futures-sink v0.3.28
+</span></span><span class=line><span class=cl>   Compiling pin-utils v0.1.0
+</span></span><span class=line><span class=cl>   Compiling tinyvec v1.6.0
+</span></span><span class=line><span class=cl>   Compiling futures-util v0.3.28
+</span></span><span class=line><span class=cl>   Compiling indexmap v1.9.3
+</span></span><span class=line><span class=cl>   Compiling openssl-probe v0.1.5
+</span></span><span class=line><span class=cl>   Compiling openssl v0.10.56
+</span></span><span class=line><span class=cl>   Compiling log v0.4.19
+</span></span><span class=line><span class=cl>   Compiling try-lock v0.2.4
+</span></span><span class=line><span class=cl>   Compiling percent-encoding v2.3.0
+</span></span><span class=line><span class=cl>   Compiling unicode-normalization v0.1.22
+</span></span><span class=line><span class=cl>   Compiling form_urlencoded v1.2.0
+</span></span><span class=line><span class=cl>   Compiling want v0.3.1
+</span></span><span class=line><span class=cl>   Compiling httparse v1.8.0
+</span></span><span class=line><span class=cl>   Compiling futures-channel v0.3.28
+</span></span><span class=line><span class=cl>   Compiling serde v1.0.183
+</span></span><span class=line><span class=cl>   Compiling http-body v0.4.5
+</span></span><span class=line><span class=cl>   Compiling tower-service v0.3.2
+</span></span><span class=line><span class=cl>   Compiling ryu v1.0.15
+</span></span><span class=line><span class=cl>   Compiling httpdate v1.0.2
+</span></span><span class=line><span class=cl>   Compiling unicode-bidi v0.3.13
+</span></span><span class=line><span class=cl>   Compiling encoding_rs v0.8.32
+</span></span><span class=line><span class=cl>   Compiling idna v0.4.0
+</span></span><span class=line><span class=cl>   Compiling url v2.4.0
+</span></span><span class=line><span class=cl>   Compiling tokio-util v0.7.8
+</span></span><span class=line><span class=cl>   Compiling h2 v0.3.20
+</span></span><span class=line><span class=cl>   Compiling native-tls v0.2.11
+</span></span><span class=line><span class=cl>   Compiling serde_urlencoded v0.7.1
+</span></span><span class=line><span class=cl>   Compiling tokio-native-tls v0.3.1
+</span></span><span class=line><span class=cl>   Compiling serde_json v1.0.104
+</span></span><span class=line><span class=cl>   Compiling ipnet v2.8.0
+</span></span><span class=line><span class=cl>   Compiling mime v0.3.17
+</span></span><span class=line><span class=cl>   Compiling base64 v0.21.2
+</span></span><span class=line><span class=cl>   Compiling hyper v0.14.27
+</span></span><span class=line><span class=cl>   Compiling hyper-tls v0.5.0
+</span></span><span class=line><span class=cl>   Compiling reqwest v0.11.18
+</span></span><span class=line><span class=cl>   Compiling hello v0.1.0 <span class=o>(</span>/root/hello<span class=o>)</span>
+</span></span><span class=line><span class=cl>error: linking with <span class=sb>`</span>/root/zcc<span class=sb>`</span> failed: <span class=nb>exit</span> status: <span class=m>1</span>
+</span></span><span class=line><span class=cl>  <span class=p>|</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: <span class=nv>LC_ALL</span><span class=o>=</span><span class=s2>&#34;C&#34;</span> <span class=nv>PATH</span><span class=o>=</span><span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#34;</span> <span class=nv>VSLANG</span><span class=o>=</span><span class=s2>&#34;1033&#34;</span> <span class=s2>&#34;/root/zcc&#34;</span> <span class=s2>&#34;-m64&#34;</span> <span class=s2>&#34;/tmp/rustceja6Ye/symbols.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.1lmq1ouv58w3rwz.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.1yizfmm3nj5x3q7w.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.2nzud2ndcojz7uk2.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.3a55l8llsp3r2tcl.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.4ok09fnd53o40xs8.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.4y92ixbrkcvb8jys.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.57guh5q81h8sa6ag.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.5cdk9g0lv2noid4s.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.5g88t7k0ybyitp8h.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.dh08tp5wn056bn5.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.dqlvcrgqkc7ceom.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.hiecjvjjv53un8g.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.zjk48m8k5yuqax7.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.3bzdcys5ws4an6mz.rcgu.o&#34;</span> <span class=s2>&#34;-Wl,--as-needed&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/hello/target/debug/deps&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/usr/lib&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib&#34;</span> <span class=s2>&#34;-Wl,-Bstatic&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libreqwest-a4928d2796b7a20a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhyper_tls-6adcb3f682fd63be.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbase64-f032cdc26b2188fd.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libipnet-9fcf7a1b05f70428.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio_native_tls-84d0836c10c03084.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde_urlencoded-12f3954529516483.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmime-61cb5f21eb43cd09.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libencoding_rs-7191fbee27b32ca8.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde_json-b7863fea1f06fdc2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libryu-eb41dd4558394161.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde-b1bc13ea6b13e86a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libnative_tls-8cc19a344b2b97ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl_probe-33c3113c2ab0c38a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl-878c34367adf445f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbitflags-a35fc4f5e760ae0c.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libforeign_types-344debc7b4283ac5.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libforeign_types_shared-d4b5ae7f9901e3ef.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl_sys-d44d47f3a15f4314.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhyper-ad505ff30a83f00f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libwant-da6c59dcd2b430e8.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtry_lock-63e33292a4cab6b7.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttparse-86bb3be05875b2be.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libh2-86a6152341939650.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libindexmap-700fb0f243cbf770.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhashbrown-3e2a8dddddd69e47.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio_util-01f3c807bcba0656.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_sink-47ab71e3b2a9d652.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtower_service-55f09582429b3ad2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtracing-22c55ea82046148d.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libcfg_if-763b1ddbb00ab312.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtracing_core-8b484e32d3a618dc.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libonce_cell-df35a5bc77e9bad2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_channel-b3ab7d62489521ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio-0a1f54475be772d7.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libnum_cpus-ed3c6a13d6ca91c3.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libsocket2-37ebd4a8a7b2d956.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmio-2908ea1e129c91b6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liblibc-4a181a3269fd660d.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttp_body-b0a126980fc702e6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liblog-343afbef5c0c4dc0.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_util-95f015b9173c8184.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmemchr-f2f0db64792846a0.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_io-814bd2be1702f58b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libslab-7b5ee7683556de32.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpin_project_lite-f0335dd74864094f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_task-834669506822b441.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpin_utils-e9460a26d7509d0b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_core-59d6481d783432fe.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liburl-72c7256e70d64cc4.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libidna-f828dd91a3024d62.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libunicode_normalization-12be77ce4e4ef380.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtinyvec-ac95596c2aa9b76c.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtinyvec_macros-40bbf77c062383ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libunicode_bidi-3e4ce736fb98ad05.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libform_urlencoded-8a01bf4df8ff1a6b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpercent_encoding-efe5dc91ab199535.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttp-caefd3ce726da4f6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libitoa-6b7a72b344370fc1.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbytes-db81abd5b66cf450.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfnv-7fa02a81681331dc.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd-493936ddc336b3cf.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libpanic_unwind-3dd70cbadf3e1002.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libobject-3558ee77f8b1ad74.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libmemchr-10f2552578618c97.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libaddr2line-7b520da5a73d1918.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libgimli-3702969c0e889474.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_demangle-c0cc4c329ee15590.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd_detect-874514dffe09e03c.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libhashbrown-e3f573f6d5b58355.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_std_workspace_alloc-85dc525393d56c52.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libminiz_oxide-36ca93bbf21bf97c.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libadler-1041082638612281.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libunwind-e11982fd4ee76f53.rlib&#34;</span> <span class=s2>&#34;-lunwind&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcfg_if-78634847bd9095da.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/liblibc-930f912cc77d37c5.rlib&#34;</span> <span class=s2>&#34;-lc&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/liballoc-8cc0612c0889f762.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_std_workspace_core-918df048a2f8e1f4.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcore-d1705156e6561f5f.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcompiler_builtins-9ad5603f71a0f0cc.rlib&#34;</span> <span class=s2>&#34;-Wl,-Bdynamic&#34;</span> <span class=s2>&#34;-lssl&#34;</span> <span class=s2>&#34;-lcrypto&#34;</span> <span class=s2>&#34;-Wl,--eh-frame-hdr&#34;</span> <span class=s2>&#34;-Wl,-z,noexecstack&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib&#34;</span> <span class=s2>&#34;-o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475&#34;</span> <span class=s2>&#34;-Wl,--gc-sections&#34;</span> <span class=s2>&#34;-static-pie&#34;</span> <span class=s2>&#34;-Wl,-z,relro,-z,now&#34;</span> <span class=s2>&#34;-nodefaultlibs&#34;</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: error: static library <span class=s1>&#39;unwind&#39;</span> not found. search paths:
+</span></span><span class=line><span class=cl>           /root/hello/target/x86_64-unknown-linux-musl/debug/deps/libunwind.a
+</span></span><span class=line><span class=cl>           /root/hello/target/debug/deps/libunwind.a
+</span></span><span class=line><span class=cl>           /usr/lib/libunwind.a
+</span></span><span class=line><span class=cl>           /root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libunwind.a
+</span></span><span class=line><span class=cl>           /root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libunwind.a
+</span></span><span class=line><span class=cl>           suggestion: use full paths to static libraries on the <span class=nb>command</span> line rather than using -l and -L arguments
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>error: could not compile <span class=sb>`</span>hello<span class=sb>`</span> <span class=o>(</span>bin <span class=s2>&#34;hello&#34;</span><span class=o>)</span> due to previous error
+</span></span></code></pre></td></tr></table></div></div><p>我只能在设备上找到<code>libunwind.so</code>，找不到<code>.a</code>文件，别人也是卡在了这里。我尝试在系统里搜索这个文件，还真让我找到了
+<code>./.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/libunwind.a</code></p><p>我毫不客气的就把它给链接到了上面报错里提到的路径里，比方说<code>/usr/lib</code></p><p><code>ln -s ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/ lib/self-contained/libunwind.a /usr/lib</code></p><p>然后再次尝试编译，再次报错</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=line><span class=cl>Compiling hello v0.1.0 <span class=o>(</span>/root/hello<span class=o>)</span>
+</span></span><span class=line><span class=cl>error: linking with <span class=sb>`</span>/root/zcc<span class=sb>`</span> failed: <span class=nb>exit</span> status: <span class=m>1</span>
+</span></span><span class=line><span class=cl>  <span class=p>|</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: <span class=nv>LC_ALL</span><span class=o>=</span><span class=s2>&#34;C&#34;</span> <span class=nv>PATH</span><span class=o>=</span><span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#34;</span> <span class=nv>VSLANG</span><span class=o>=</span><span class=s2>&#34;1033&#34;</span> <span class=s2>&#34;/root/zcc&#34;</span> <span class=s2>&#34;-m64&#34;</span> <span class=s2>&#34;/tmp/rustctAxXkT/symbols.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.1lmq1ouv58w3rwz.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.1yizfmm3nj5x3q7w.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.2nzud2ndcojz7uk2.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.3a55l8llsp3r2tcl.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.4ok09fnd53o40xs8.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.4y92ixbrkcvb8jys.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.57guh5q81h8sa6ag.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.5cdk9g0lv2noid4s.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.5g88t7k0ybyitp8h.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.dh08tp5wn056bn5.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.dqlvcrgqkc7ceom.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.hiecjvjjv53un8g.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.zjk48m8k5yuqax7.rcgu.o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475.3bzdcys5ws4an6mz.rcgu.o&#34;</span> <span class=s2>&#34;-Wl,--as-needed&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/hello/target/debug/deps&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/usr/lib&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib&#34;</span> <span class=s2>&#34;-Wl,-Bstatic&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libreqwest-a4928d2796b7a20a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhyper_tls-6adcb3f682fd63be.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbase64-f032cdc26b2188fd.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libipnet-9fcf7a1b05f70428.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio_native_tls-84d0836c10c03084.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde_urlencoded-12f3954529516483.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmime-61cb5f21eb43cd09.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libencoding_rs-7191fbee27b32ca8.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde_json-b7863fea1f06fdc2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libryu-eb41dd4558394161.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libserde-b1bc13ea6b13e86a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libnative_tls-8cc19a344b2b97ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl_probe-33c3113c2ab0c38a.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl-878c34367adf445f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbitflags-a35fc4f5e760ae0c.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libforeign_types-344debc7b4283ac5.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libforeign_types_shared-d4b5ae7f9901e3ef.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libopenssl_sys-d44d47f3a15f4314.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhyper-ad505ff30a83f00f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libwant-da6c59dcd2b430e8.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtry_lock-63e33292a4cab6b7.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttparse-86bb3be05875b2be.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libh2-86a6152341939650.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libindexmap-700fb0f243cbf770.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhashbrown-3e2a8dddddd69e47.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio_util-01f3c807bcba0656.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_sink-47ab71e3b2a9d652.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtower_service-55f09582429b3ad2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtracing-22c55ea82046148d.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libcfg_if-763b1ddbb00ab312.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtracing_core-8b484e32d3a618dc.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libonce_cell-df35a5bc77e9bad2.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_channel-b3ab7d62489521ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtokio-0a1f54475be772d7.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libnum_cpus-ed3c6a13d6ca91c3.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libsocket2-37ebd4a8a7b2d956.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmio-2908ea1e129c91b6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liblibc-4a181a3269fd660d.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttp_body-b0a126980fc702e6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liblog-343afbef5c0c4dc0.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_util-95f015b9173c8184.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libmemchr-f2f0db64792846a0.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_io-814bd2be1702f58b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libslab-7b5ee7683556de32.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpin_project_lite-f0335dd74864094f.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_task-834669506822b441.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpin_utils-e9460a26d7509d0b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfutures_core-59d6481d783432fe.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/liburl-72c7256e70d64cc4.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libidna-f828dd91a3024d62.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libunicode_normalization-12be77ce4e4ef380.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtinyvec-ac95596c2aa9b76c.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libtinyvec_macros-40bbf77c062383ea.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libunicode_bidi-3e4ce736fb98ad05.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libform_urlencoded-8a01bf4df8ff1a6b.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libpercent_encoding-efe5dc91ab199535.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libhttp-caefd3ce726da4f6.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libitoa-6b7a72b344370fc1.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libbytes-db81abd5b66cf450.rlib&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/libfnv-7fa02a81681331dc.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd-493936ddc336b3cf.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libpanic_unwind-3dd70cbadf3e1002.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libobject-3558ee77f8b1ad74.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libmemchr-10f2552578618c97.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libaddr2line-7b520da5a73d1918.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libgimli-3702969c0e889474.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_demangle-c0cc4c329ee15590.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd_detect-874514dffe09e03c.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libhashbrown-e3f573f6d5b58355.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_std_workspace_alloc-85dc525393d56c52.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libminiz_oxide-36ca93bbf21bf97c.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libadler-1041082638612281.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libunwind-e11982fd4ee76f53.rlib&#34;</span> <span class=s2>&#34;-lunwind&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcfg_if-78634847bd9095da.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/liblibc-930f912cc77d37c5.rlib&#34;</span> <span class=s2>&#34;-lc&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/liballoc-8cc0612c0889f762.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/librustc_std_workspace_core-918df048a2f8e1f4.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcore-d1705156e6561f5f.rlib&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib/libcompiler_builtins-9ad5603f71a0f0cc.rlib&#34;</span> <span class=s2>&#34;-Wl,-Bdynamic&#34;</span> <span class=s2>&#34;-lssl&#34;</span> <span class=s2>&#34;-lcrypto&#34;</span> <span class=s2>&#34;-Wl,--eh-frame-hdr&#34;</span> <span class=s2>&#34;-Wl,-z,noexecstack&#34;</span> <span class=s2>&#34;-L&#34;</span> <span class=s2>&#34;/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-musl/lib&#34;</span> <span class=s2>&#34;-o&#34;</span> <span class=s2>&#34;/root/hello/target/x86_64-unknown-linux-musl/debug/deps/hello-1b96c31f4f6a4475&#34;</span> <span class=s2>&#34;-Wl,--gc-sections&#34;</span> <span class=s2>&#34;-static-pie&#34;</span> <span class=s2>&#34;-Wl,-z,relro,-z,now&#34;</span> <span class=s2>&#34;-nodefaultlibs&#34;</span>
+</span></span><span class=line><span class=cl>  <span class=o>=</span> note: ld.lld: error: undefined symbol: __gcc_personality_v0
+</span></span><span class=line><span class=cl>          &gt;&gt;&gt; referenced by iofclose.o:<span class=o>(</span>DW.ref.__gcc_personality_v0<span class=o>)</span> in archive /usr/lib/libc.a
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>error: could not compile <span class=sb>`</span>hello<span class=sb>`</span> <span class=o>(</span>bin <span class=s2>&#34;hello&#34;</span><span class=o>)</span> due to previous error
+</span></span></code></pre></td></tr></table></div></div><p>到这一步，我不得不承认，我努力的方向从一开始就是错误的</p><h2 id=解决方案>解决方案</h2><blockquote><p>虽然各种尝试都失败了，我直面困难撞得重伤倒地，但问题还得解决，我还是得把东西编译出来，于是有了以下两个解决方案</p></blockquote><h3 id=方案一切换rustls>方案一：切换rustls</h3><p>在尝试了<code>zigbuild</code>、<code>cross</code>等方案都失败之后，我开始考虑绕开<code>openssl</code>，<del>虽然不能解决问题，但是我可以躲开问题</del></p><p>确认依赖项都提供了把<code>native-tls</code>换成<code>rustls</code>的features，于是我一个修改，<code>Cargo.toml</code>内容就变成了</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-toml data-lang=toml><span class=line><span class=cl><span class=p>[</span><span class=nx>package</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>name</span> <span class=p>=</span> <span class=s2>&#34;hello&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.1.0&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>edition</span> <span class=p>=</span> <span class=s2>&#34;2021&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c># See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>[</span><span class=nx>dependencies</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>reqwest</span> <span class=p>=</span> <span class=p>{</span> <span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.11.18&#34;</span><span class=p>,</span> <span class=nx>default-features</span> <span class=p>=</span> <span class=kc>false</span><span class=p>,</span> <span class=nx>features</span> <span class=p>=</span> <span class=p>[</span><span class=s2>&#34;json&#34;</span><span class=p>,</span> <span class=s2>&#34;blocking&#34;</span><span class=p>,</span> <span class=s2>&#34;rustls&#34;</span><span class=p>]</span> <span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>然后删除了之前折腾的zig cc的遗留配置文件，防止干扰，然后一个编译，最简单的<code>cargo build --release --target=x86_64-unknown-linux-musl</code></p><p><strong>然后就成功了，就这么简单</strong></p><p>确认一下</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=line><span class=cl><span class=o>[</span>root@1f8081b4b5b6 hello<span class=o>]</span><span class=c1># ldd ./target/x86_64-unknown-linux-musl/release/hello</span>
+</span></span><span class=line><span class=cl>        statically linked
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>感动来得太简单，虽然问题得到解决，但<code>openssl</code>就像个阴影一样挥之不去，经过多天的在群里跟各位大佬偷师学艺，从旁敲击，我找到了我编译不过的真正原因</p></blockquote><h3 id=方案二找到原因>方案二：找到原因</h3><blockquote><p>某天，群里有人交叉编译依赖了openssl的东西也失败了，然后大佬问"开启vendored了吗"，他表示没有，然后去试了下，回来说成功了</p></blockquote><p>因此，我去谷歌搜了好多关于vendored关键字的内容，辅以rust/cargo等字眼，最终一无所获</p><p>因为编译失败的是<code>openssl</code>，于是我去看了一下它的文档<code>https://crates.io/crates/openssl-sys/0.9.36</code>，其中一段描述引起了我的注意</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>Vendored
+</span></span><span class=line><span class=cl>[dependencies]
+</span></span><span class=line><span class=cl>openssl = { version = &#34;0.10&#34;, features = [&#34;vendored&#34;] }
+</span></span></code></pre></td></tr></table></div></div><p>这可不就是我在谷歌上没找到的东西嘛，先把这一段往依赖里加再说，于是<code>Cargo.toml</code>就变成这样</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-toml data-lang=toml><span class=line><span class=cl><span class=p>[</span><span class=nx>package</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>name</span> <span class=p>=</span> <span class=s2>&#34;hello&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.1.0&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>edition</span> <span class=p>=</span> <span class=s2>&#34;2021&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c># See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>[</span><span class=nx>dependencies</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>reqwest</span> <span class=p>=</span> <span class=p>{</span> <span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.11.18&#34;</span><span class=p>,</span> <span class=nx>features</span> <span class=p>=</span> <span class=p>[</span><span class=s2>&#34;json&#34;</span><span class=p>,</span> <span class=s2>&#34;blocking&#34;</span><span class=p>]</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=nx>openssl</span> <span class=p>=</span> <span class=p>{</span> <span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.10&#34;</span><span class=p>,</span> <span class=nx>features</span> <span class=p>=</span> <span class=p>[</span><span class=s2>&#34;vendored&#34;</span><span class=p>]</span> <span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>编译走起，它终于编译成功了！</strong></p><h4 id=结论>结论</h4><blockquote><p>经过一番讨论研究，我项目并没有直接依赖openssl但是为了引入了依赖的方式并不够直观和优雅，通过查看reqwest的features发现它其实提供了<code>native-tls-vendored</code>将openssl的vendored给暴露了出来</p></blockquote><p>于是，<code>Cargo.toml</code>就应该是这样</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-toml data-lang=toml><span class=line><span class=cl><span class=p>[</span><span class=nx>package</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>name</span> <span class=p>=</span> <span class=s2>&#34;hello&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.1.0&#34;</span>
+</span></span><span class=line><span class=cl><span class=nx>edition</span> <span class=p>=</span> <span class=s2>&#34;2021&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c># See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>[</span><span class=nx>dependencies</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=nx>reqwest</span> <span class=p>=</span> <span class=p>{</span> <span class=nx>version</span> <span class=p>=</span> <span class=s2>&#34;0.11.18&#34;</span><span class=p>,</span> <span class=nx>features</span> <span class=p>=</span> <span class=p>[</span><span class=s2>&#34;json&#34;</span><span class=p>,</span> <span class=s2>&#34;blocking&#34;</span><span class=p>,</span> <span class=s2>&#34;native-tls-vendored&#34;</span><span class=p>]</span> <span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>如此就直观多了，如果遇到依赖了openssl但是没有暴露它的features的方案，可以使用上面那种并不直观的方式，追加一个openssl的直接依赖去修改</p><h2 id=写在最后>写在最后</h2><p><strong>不要硬撞</strong></p><p>该看文档看文档，该问大佬问大佬，在错误的方向上努力除了浪费时间之外最大的用处只有打击自信了</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2023-08-07</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 Twitter" data-sharer=twitter data-url=https://moexco.github.io/posts/rust_build_musl/ data-title=记一次Rust静态编译 data-via=xco_moe data-hashtags=Rust><i class="fab fa-twitter fa-fw"></i></a><a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://moexco.github.io/posts/rust_build_musl/ data-hashtag=Rust><i class="fab fa-facebook-square fa-fw"></i></a><a href=javascript:void(0); title="分享到 WhatsApp" data-sharer=whatsapp data-url=https://moexco.github.io/posts/rust_build_musl/ data-title=记一次Rust静态编译 data-web><i class="fab fa-whatsapp fa-fw"></i></a><a href=javascript:void(0); title="分享到 Line" data-sharer=line data-url=https://moexco.github.io/posts/rust_build_musl/ data-title=记一次Rust静态编译><i data-svg-src=/lib/simple-icons/icons/line.min.svg></i></a><a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://moexco.github.io/posts/rust_build_musl/ data-title=记一次Rust静态编译><i class="fab fa-weibo fa-fw"></i></a><a href=javascript:void(0); title="分享到 Myspace" data-sharer=myspace data-url=https://moexco.github.io/posts/rust_build_musl/ data-title=记一次Rust静态编译 data-description><i data-svg-src=/lib/simple-icons/icons/myspace.min.svg></i></a><a href=javascript:void(0); title="分享到 Blogger" data-sharer=blogger data-url=https://moexco.github.io/posts/rust_build_musl/ data-title=记一次Rust静态编译 data-description><i class="fab fa-blogger fa-fw"></i></a><a href=javascript:void(0); title="分享到 Evernote" data-sharer=evernote data-url=https://moexco.github.io/posts/rust_build_musl/ data-title=记一次Rust静态编译><i class="fab fa-evernote fa-fw"></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/rust/>Rust</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/aio-server/ class=prev rel=prev title=Aio服务器搭建><i class="fas fa-angle-left fa-fw"></i>Aio服务器搭建</a></div></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line>匠人の魂を探す</div><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2021 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>moexco</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw"></i>
+</a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw"></i></a></div><script type=text/javascript src=/lib/smooth-scroll/smooth-scroll.min.js></script><script type=text/javascript src=/lib/lazysizes/lazysizes.min.js></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript src=/lib/sharer/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>
