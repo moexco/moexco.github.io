@@ -799,6 +799,8 @@ git push origin main
 
 ## Github Actions
 
+**注意，本章节内容已经过时，仅供参考，具体请查看GitHub和`peaceiris/actions-gh-pages`相关改动和说明**
+
 > 我们希望，我们可以 `git push` 整个博客源文件到github然后自动更新博客，所以我们要将博客也上传到github上
 
 > 因为我们的public里已经有一个git仓库了，所以我们这里先删掉public，重新hugo生成一个
