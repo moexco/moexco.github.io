@@ -263,9 +263,4 @@
 </ul>
 <blockquote>
 <p>如果你的虚拟机正在运行，没有先执行关闭就执行了删除，虚拟机不会被马上删除，会等到关闭之后才删除</p>
-</blockquote>
-<h2 id="三openwrt旁路由">三、openwrt旁路由</h2>
-<h2 id="四虚拟机映射物理分区">四、虚拟机映射物理分区</h2>
-<h2 id="五docker容器化服务管理">五、docker容器化服务管理</h2>
-<h2 id="六samba文件服务配置">六、samba文件服务配置</h2>
-<h2 id="七jellyfin家庭影音搭建">七、jellyfin家庭影音搭建</h2>]]></description></item><item><title>Linux触屏旋转</title><link>https://moexco.github.io/posts/linux-touch-screen-rotation/</link><pubDate>Fri, 26 Mar 2021 23:03:02 +0800</pubDate><author>作者</author><guid>https://moexco.github.io/posts/linux-touch-screen-rotation/</guid><description>说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号</description></item></channel></rss>
+</blockquote>]]></description></item><item><title>Linux触屏旋转</title><link>https://moexco.github.io/posts/linux-touch-screen-rotation/</link><pubDate>Fri, 26 Mar 2021 23:03:02 +0800</pubDate><author>作者</author><guid>https://moexco.github.io/posts/linux-touch-screen-rotation/</guid><description>说明 其实这是一个回忆记录贴，前几天朋友提到了这件事，所以想记录一下 起因是这样的： 我收了一个x86的板子，酷比IWork10 Pro 旗舰版，具体型号</description></item></channel></rss>
