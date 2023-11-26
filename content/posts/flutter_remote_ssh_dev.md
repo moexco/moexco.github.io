@@ -157,7 +157,7 @@ Doctor summary (to see all details, run flutter doctor -v):
 
 使用过vscode远程开发的人都体验过vscode自带的端口转发和隧道功能，没有vscode的情况下，我们就需要自己用ssh操作了
 
-最简单的方式就是`ssh -L 远程主机端口号:localhost:本地主机端口号 user@ip`  
+最简单的方式就是`ssh -L 本地主机端口号:localhost:远程主机端口号 user@ip`  
 
 于是，转发adb的流量命令就是`ssh -L 5037:localhost:5037 user@ip`
 
