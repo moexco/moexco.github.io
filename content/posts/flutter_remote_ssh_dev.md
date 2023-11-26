@@ -177,6 +177,8 @@ Host studio                             # Host 你自定义的名字
   LocalForward 5037 localhost:5037      # adb端口隧道的配置
 ```
 
+使用`ssh studio`来连接远程主机
+
 
 ### 远程adb连接真机
 
@@ -202,4 +204,68 @@ adb连上设备之后，正常运行flutter项目即可
 ```sh
 flutter run -d 192.168.123.115:40827
 ```
+
+## 使用neovim开发flutter
+
+~远程远程，开发工具也要远程~
+
+> 鉴于我是个懒人，所以选择在成品配置上二次修改，这里主要以`LunarVim`为例，它本身未支持flutter，所以需要让它能识别flutter并正常工作
+
+### 安装
+
+1. 首先当然是安装`neovim`  
+`pacman -Sy neovim`  
+2. 然后是安装`LunarVim`，这里直接使用[官网](https://www.lunarvim.org/docs/installation)提供的命令
+`LV_BRANCH='release-1.3/neovim-0.9' bash <(curl -s https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.3/neovim-0.9/utils/installer/install.sh)`
+
+
+### 配置
+
+> 基础配置每个人的习惯都不一样，这里主要记录flutter相关的部分
+
+1. 首先是选择插件[`flutter-tools.nvim`](https://github.com/akinsho/flutter-tools.nvim)  
+在`~/.config/lvim/config.lua`文件内加入以下内容:
+```lua
+lvim.plugins = {
+    {
+        'akinsho/flutter-tools.nvim',
+        lazy = false,
+        dependencies = {
+            'nvim-lua/plenary.nvim',
+            'stevearc/dressing.nvim', -- optional for vim.ui.select
+        },
+        -- config = true,
+        config = function()
+            require("flutter-tools").setup {
+                settings = {
+                    enableSnippets = true,
+                },
+                widget_guides = {
+                    enabled = true,
+                },
+                closing_tags = {
+                    enabled = true,
+                },
+                lsp = {
+                    on_attach = require("lvim.lsp").common_on_attach,
+                    color = {
+                        enabled = true,
+                        background = false,
+                        foreground = false,
+                        virtual_text = true,
+                        virtual_text_str = "■",
+                    }
+                }
+            }
+        end,
+        ft = "dart",
+    }
+}
+```
+
+2. 修复[卡死bug](https://github.com/LunarVim/LunarVim/issues/4305)，继续在配置中加入:
+```lua
+lvim.builtin.treesitter.ignore_install = {"dart"}
+```
+
 
